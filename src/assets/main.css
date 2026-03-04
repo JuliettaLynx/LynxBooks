@@ -12,12 +12,10 @@
   }
 }
 
-@layer utilities {
-  /* Для ограничения текста в 2 строки */
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+/* Блокировка прокрутки страницы при открытом модальном окне */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }

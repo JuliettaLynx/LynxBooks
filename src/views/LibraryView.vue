@@ -59,7 +59,11 @@
         <span class="text-6xl mb-4 block">📚</span>
         <p class="text-gray-500">Книги не найдены</p>
         <p class="text-sm text-gray-400 mt-2">
-          Попробуйте изменить параметры поиска
+          {{
+            books.length === 0
+              ? "Добавьте первую книгу"
+              : "Попробуйте изменить параметры поиска"
+          }}
         </p>
       </div>
 
@@ -75,7 +79,7 @@
           :key="book.id"
           :book="book"
           :is-grid="viewMode === 'grid'"
-          @edit="handleEdit"
+          @edit="openEditModal"
           @favorite="toggleFavorite"
           @delete="handleDelete"
         />
@@ -91,7 +95,12 @@
     />
 
     <!-- Модальное окно -->
-    <BookModal :is-open="isModalOpen" @close="isModalOpen = false" />
+    <BookModal
+      :is-open="isModalOpen"
+      :book-to-edit="editingBook"
+      @close="closeModal"
+      @save="saveBook"
+    />
   </div>
 </template>
 
@@ -111,6 +120,7 @@ const debouncedSearch = ref("");
 const sortMode = ref(0); // 0: название А-Я, 1: название Я-А, 2: автор А-Я, 3: автор Я-А
 const filterMode = ref(0); // 0: все, 1: избранные, 2: прочитано, 3: не прочитано, 4: брошено
 const isModalOpen = ref(false);
+const editingBook = ref(null);
 const loading = ref(false);
 
 // Иконки для сортировки
@@ -120,6 +130,22 @@ const sortIcon = computed(() => sortIcons[sortMode.value]);
 // Иконки для фильтра
 const filterIcons = ["📚", "⭐", "✅", "📖", "❌"];
 const filterIcon = computed(() => filterIcons[filterMode.value]);
+
+// Методы управления модалкой
+const openAddModal = () => {
+  editingBook.value = null;
+  isModalOpen.value = true;
+};
+
+const openEditModal = (book) => {
+  editingBook.value = { ...book }; // Копируем, чтобы не менять оригинал до сохранения
+  isModalOpen.value = true;
+};
+
+const closeModal = () => {
+  isModalOpen.value = false;
+  editingBook.value = null;
+};
 
 // Метод для переключения режима отображения
 const toggleViewMode = () => {
@@ -151,7 +177,7 @@ const books = ref([
     id: 1,
     title: "Война и мир",
     author: "Лев Толстой",
-    format: "бумажная",
+    format: "📄",
     status: "прочитано",
     rating: 5,
     isFavorite: true,
@@ -160,7 +186,7 @@ const books = ref([
     id: 2,
     title: "Преступление и наказание",
     author: "Фёдор Достоевский",
-    format: "электронная",
+    format: "📱",
     status: "не прочитано",
     isFavorite: false,
   },
@@ -168,7 +194,7 @@ const books = ref([
     id: 3,
     title: "Мастер и Маргарита",
     author: "Михаил Булгаков",
-    format: "бумажная",
+    format: "📄",
     status: "не прочитано",
     isFavorite: false,
   },
@@ -176,7 +202,7 @@ const books = ref([
     id: 4,
     title: "1984",
     author: "Джордж Оруэлл",
-    format: "электронная",
+    format: "📱",
     status: "прочитано",
     rating: 4,
     isFavorite: true,
@@ -185,7 +211,7 @@ const books = ref([
     id: 5,
     title: "Улисс",
     author: "Джеймс Джойс",
-    format: "бумажная",
+    format: "📄",
     status: "брошено",
     isFavorite: false,
   },
@@ -193,7 +219,7 @@ const books = ref([
     id: 6,
     title: "Анна Каренина",
     author: "Лев Толстой",
-    format: "бумажная",
+    format: "📄",
     status: "прочитано",
     rating: 5,
     isFavorite: true,
@@ -202,7 +228,7 @@ const books = ref([
     id: 7,
     title: "Идиот",
     author: "Фёдор Достоевский",
-    format: "электронная",
+    format: "📱",
     status: "не прочитано",
     isFavorite: false,
   },
@@ -210,7 +236,7 @@ const books = ref([
     id: 8,
     title: "Собачье сердце",
     author: "Михаил Булгаков",
-    format: "бумажная",
+    format: "📄",
     status: "прочитано",
     rating: 5,
     isFavorite: false,
@@ -219,7 +245,7 @@ const books = ref([
     id: 9,
     title: "Скотный двор",
     author: "Джордж Оруэлл",
-    format: "электронная",
+    format: "📱",
     status: "не прочитано",
     isFavorite: false,
   },
@@ -227,7 +253,7 @@ const books = ref([
     id: 10,
     title: "Портрет художника в юности",
     author: "Джеймс Джойс",
-    format: "электронная",
+    format: "📱",
     status: "брошено",
     isFavorite: false,
   },
@@ -293,11 +319,6 @@ const filteredBooks = computed(() => {
   return sorted;
 });
 
-// Методы
-const handleEdit = (book) => {
-  console.log("Редактировать:", book);
-};
-
 const toggleFavorite = (book) => {
   book.isFavorite = !book.isFavorite;
 };
@@ -305,6 +326,24 @@ const toggleFavorite = (book) => {
 const handleDelete = (book) => {
   if (confirm(`Удалить книгу "${book.title}"?`)) {
     books.value = books.value.filter((b) => b.id !== book.id);
+  }
+};
+
+// Сохранение книги
+const saveBook = (bookData) => {
+  if (bookData.id) {
+    // Редактирование - заменяем всю книгу
+    const index = books.value.findIndex((b) => b.id === bookData.id);
+    if (index !== -1) {
+      books.value[index] = bookData;
+    }
+  } else {
+    // Добавление
+    const newBook = {
+      ...bookData,
+      id: Date.now(), // Простой способ генерации id
+    };
+    books.value.push(newBook);
   }
 };
 

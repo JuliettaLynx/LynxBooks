@@ -1,24 +1,41 @@
 <template>
   <div
-    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] dark:text-gray-200"
+    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] dark:text-gray-200 relative"
     :class="[isGrid ? 'flex' : '']"
   >
+    <!-- Три точки (только для плитки) - поверх обложки  -->
+    <div v-if="!isGrid" class="absolute top-2 right-2 z-10">
+      <BookActions
+        :book="book"
+        :is-grid="isGrid"
+        @favorite="$emit('favorite', $event)"
+        @edit="$emit('edit', $event)"
+        @delete="$emit('delete', $event)"
+      />
+    </div>
+
     <!-- Обложка -->
     <div
       class="bg-gray-100 dark:bg-gray-700 flex-shrink-0"
-      :class="isGrid ? 'w-24 h-32' : 'w-full h-48'"
+      :class="isGrid ? 'w-24' : 'h-48'"
     >
       <div
         class="w-full h-full flex items-center justify-center text-4xl text-gray-400 dark:text-gray-500"
       >
-        📖
+        <img
+          v-if="book.cover"
+          :src="book.cover"
+          class="w-full h-full object-cover"
+          alt="Обложка"
+        />
+        <span v-else>📷</span>
       </div>
     </div>
 
     <!-- Информация о книге -->
-    <div class="p-3 flex-1" :class="isGrid ? '' : 'relative'">
-      <div class="flex justify-between items-start">
-        <div class="flex-1">
+    <div class="p-3 flex-1 relative">
+      <div class="flex justify-between">
+        <div class="flex-1 pr-2">
           <h3
             class="font-semibold text-gray-800 dark:text-gray-200 line-clamp-2"
           >
@@ -29,7 +46,7 @@
           </p>
 
           <!-- Формат и статус -->
-          <div class="flex items-center gap-2 mt-2">
+          <div class="flex items-center gap-2 mt-2 flex-wrap">
             <span
               class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full dark:text-gray-300"
             >
@@ -61,26 +78,14 @@
           </div>
         </div>
 
-        <!-- Кнопки действий -->
-        <div class="flex gap-1">
-          <IconButton
-            icon="✎"
-            @click="$emit('edit', book)"
-            class="dark:text-gray-400"
-          />
-          <IconButton
-            icon="♥"
-            :class="
-              book.isFavorite
-                ? 'text-red-500 dark:text-red-400'
-                : 'dark:text-gray-400'
-            "
-            @click="$emit('favorite', book)"
-          />
-          <IconButton
-            icon="🗑"
-            @click="$emit('delete', book)"
-            class="dark:text-gray-400"
+        <!-- Действия с книгой (для карточек) -->
+        <div v-if="isGrid">
+          <BookActions
+            :book="book"
+            :is-grid="isGrid"
+            @favorite="$emit('favorite', $event)"
+            @edit="$emit('edit', $event)"
+            @delete="$emit('delete', $event)"
           />
         </div>
       </div>
@@ -89,7 +94,7 @@
 </template>
 
 <script setup>
-import IconButton from "./IconButton.vue";
+import BookActions from "./BookActions.vue";
 
 defineProps({
   book: {

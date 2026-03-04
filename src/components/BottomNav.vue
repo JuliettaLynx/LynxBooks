@@ -24,7 +24,7 @@
       active-class="text-blue-600 dark:text-blue-400"
       exact-active-class="text-blue-600 dark:text-blue-400"
     >
-      <span class="text-2xl">⭐</span>
+      <span class="text-2xl">🎁</span>
     </router-link>
   </nav>
 </template>
