@@ -13,10 +13,24 @@
       content="black-translucent"
     />
     <title>lynx-books</title>
-    <script type="module" crossorigin src="/LynxBooks/assets/index-DdTExAzv.js"></script>
-    <link rel="stylesheet" crossorigin href="/LynxBooks/assets/index-D2IQLs45.css">
+    <script type="module" crossorigin src="/LynxBooks/assets/index-Co9GiUDM.js"></script>
+    <link rel="stylesheet" crossorigin href="/LynxBooks/assets/index-DFhAlW32.css">
   </head>
   <body>
     <div id="app"></div>
+
+    <script>
+      (function () {
+        const redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+
+        if (redirect && redirect !== location.pathname) {
+          const basePath = "/LynxBooks";
+          const redirectPath = redirect.replace(basePath, "");
+          history.replaceState(null, null, basePath + redirectPath);
+        }
+      })();
+    </script>
+
   </body>
 </html>
