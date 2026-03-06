@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>LynxBooks</title>
+    <script>
+      // Сохраняем путь и перенаправляем на главную
+      sessionStorage.setItem(
+        "redirect",
+        location.pathname + location.search + location.hash,
+      );
+      location.replace("/LynxBooks/");
+    </script>
+  </head>
+  <body></body>
+</html>
