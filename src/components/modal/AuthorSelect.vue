@@ -41,14 +41,14 @@
 
     <!-- Выпадающий список -->
     <div
-      v-if="isOpen && filteredPublishers.length > 0"
+      v-if="isOpen && filtredAuthors.length > 0"
       class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-900 dark:text-gray-100 border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
     >
       <ul>
         <li
-          v-for="(publisher, index) in filteredPublishers"
-          :key="publisher.id"
-          @mousedown.prevent="selectPublisher(publisher.name)"
+          v-for="(author, index) in filtredAuthors"
+          :key="author.id"
+          @mousedown.prevent="selectAuthor(author.name)"
           @mouseenter="highlightedIndex = index"
           :class="[
             'px-4 py-2 cursor-pointer transition-colors',
@@ -57,14 +57,14 @@
               : 'hover:bg-gray-100 dark:hover:bg-gray-700',
           ]"
         >
-          {{ publisher.name }}
+          {{ author.name }}
         </li>
       </ul>
     </div>
 
     <!-- Сообщение, если ничего не найдено, но есть введенный текст -->
     <div
-      v-else-if="isOpen && searchQuery && filteredPublishers.length === 0"
+      v-else-if="isOpen && searchQuery && filtredAuthors.length === 0"
       class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-900 dark:text-gray-100 border border-gray-300 rounded-lg shadow-lg p-4 text-gray-500 text-center"
     >
       Будет добавлено:
@@ -75,7 +75,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
-import { publishersList } from "../../constants/publishers";
+import { authorsList } from "../../constants/authors";
 
 // Props
 const props = defineProps({
@@ -99,11 +99,11 @@ const highlightedIndex = ref(-1);
 const isSelecting = ref(false); // Флаг для отслеживания выбора из списка
 
 // Методы
-const selectPublisher = (publisherName) => {
+const selectAuthor = (authorName) => {
   isSelecting.value = true; // Устанавливаем флаг, что идет выбор из списка
-  searchQuery.value = publisherName;
+  searchQuery.value = authorName;
   isOpen.value = false;
-  emit("update:modelValue", publisherName);
+  emit("update:modelValue", authorName);
 
   // Сбрасываем флаг через небольшую задержку
   setTimeout(() => {
@@ -112,12 +112,12 @@ const selectPublisher = (publisherName) => {
 };
 
 // Фильтрация издательств по поисковому запросу
-const filteredPublishers = computed(() => {
-  if (!searchQuery.value) return publishersList;
+const filtredAuthors = computed(() => {
+  if (!searchQuery.value) return authorsList;
 
   const query = searchQuery.value.toLowerCase().trim();
-  return publishersList.filter((publisher) =>
-    publisher.name.toLowerCase().includes(query),
+  return authorsList.filter((author) =>
+    author.name.toLowerCase().includes(query),
   );
 });
 
@@ -155,9 +155,9 @@ const selectNext = () => {
     return;
   }
 
-  if (filteredPublishers.value.length > 0) {
+  if (filtredAuthors.value.length > 0) {
     highlightedIndex.value =
-      (highlightedIndex.value + 1) % filteredPublishers.value.length;
+      (highlightedIndex.value + 1) % filtredAuthors.value.length;
     scrollToHighlighted();
   }
 };
@@ -168,20 +168,20 @@ const selectPrevious = () => {
     return;
   }
 
-  if (filteredPublishers.value.length > 0) {
+  if (filtredAuthors.value.length > 0) {
     highlightedIndex.value =
       highlightedIndex.value <= 0
-        ? filteredPublishers.value.length - 1
+        ? filtredAuthors.value.length - 1
         : highlightedIndex.value - 1;
     scrollToHighlighted();
   }
 };
 
 const selectCurrent = () => {
-  if (highlightedIndex.value >= 0 && filteredPublishers.value.length > 0) {
-    selectPublisher(filteredPublishers.value[highlightedIndex.value].name);
-  } else if (filteredPublishers.value.length === 1) {
-    selectPublisher(filteredPublishers.value[0].name);
+  if (highlightedIndex.value >= 0 && filtredAuthors.value.length > 0) {
+    selectAuthor(filtredAuthors.value[highlightedIndex.value].name);
+  } else if (filtredAuthors.value.length === 1) {
+    selectAuthor(filtredAuthors.value[0].name);
   } else if (searchQuery.value.trim()) {
     const value = searchQuery.value.trim();
     emit("update:modelValue", value);
@@ -227,7 +227,7 @@ watch(
 );
 
 // Сбрасываем подсветку при изменении списка
-watch(filteredPublishers, () => {
+watch(filtredAuthors, () => {
   highlightedIndex.value = -1;
 });
 

@@ -36,13 +36,20 @@
     <div class="p-3 flex-1 relative">
       <div class="flex justify-between">
         <div class="flex-1 pr-2">
-          <h3
-            class="font-semibold text-gray-800 dark:text-gray-200 line-clamp-2"
+          <p class="text-sm leading-4 text-gray-500 dark:text-gray-400">
+            {{ book.author }}
+          </p>
+          <p
+            class="text-base leading-6 font-medium text-gray-800 dark:text-gray-200 line-clamp-2"
           >
             {{ book.title }}
-          </h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {{ book.author }}
+          </p>
+          <!-- Издательство (всегда строка) -->
+          <p
+            v-if="book.publisher"
+            class="text-sm text-gray-500 dark:text-gray-400 mt-3"
+          >
+            {{ book.publisher }}
           </p>
 
           <!-- Формат и статус -->
@@ -96,7 +103,7 @@
 <script setup>
 import BookActions from "./BookActions.vue";
 
-defineProps({
+const props = defineProps({
   book: {
     type: Object,
     required: true,

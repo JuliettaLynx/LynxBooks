@@ -4,7 +4,7 @@
     :class="[variant === 'primary' ? 'text-blue-600' : 'text-gray-600']"
     @click="$emit('click')"
   >
-    <span class="text-xl" v-if="icon">{{ icon }}</span>
+    <span class="text-lg" v-if="icon">{{ icon }}</span>
     <span v-if="text" class="ml-1">{{ text }}</span>
   </button>
 </template>

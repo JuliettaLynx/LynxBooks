@@ -4,13 +4,18 @@ import TrackerView from "../views/TrackerView.vue";
 import WishlistView from "../views/WishlistView.vue";
 import NotFoundView from "../views/404.vue";
 
-// router/index.js
 const routes = [
+  {
+    path: "/",
+    redirect: "/library",
+    component: LibraryView,
+    meta: { showBottomNav: true }, // показывать навигацию
+  },
   {
     path: "/library",
     name: "library",
     component: LibraryView,
-    meta: { showBottomNav: true }, // показывать навигацию
+    meta: { showBottomNav: true },
   },
   {
     path: "/tracker",

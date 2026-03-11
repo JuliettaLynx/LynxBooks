@@ -23,11 +23,9 @@
             />
 
             <div class="flex-1 space-y-4">
-              <BookFormFields
-                v-model:title="form.title"
-                v-model:author="form.author"
-              />
-              <PublisherSelect v-model="selectedPublisher" />
+              <BookFormFields v-model:title="form.title" />
+              <AuthorSelect v-model="form.author" />
+              <PublisherSelect v-model="form.publisher" />
             </div>
           </div>
 
@@ -61,6 +59,7 @@ import BookStatus from "./modal/BookStatus.vue";
 import BookRating from "./modal/BookRating.vue";
 import BookDescription from "./modal/BookDescription.vue";
 import PublisherSelect from "./modal/PublisherSelect.vue";
+import AuthorSelect from "./modal/AuthorSelect.vue";
 
 const props = defineProps({
   isOpen: Boolean,
@@ -81,7 +80,6 @@ const form = reactive({
 });
 
 const coverPreview = ref(null);
-const selectedPublisher = ref(null);
 
 // Сброс формы
 const resetForm = () => {
@@ -92,8 +90,8 @@ const resetForm = () => {
   form.rating = 0;
   form.description = "";
   form.cover = null;
+  form.publisher = "";
   coverPreview.value = null;
-  selectedPublisher.value = null;
 };
 
 // Заполнение при редактировании
@@ -102,16 +100,36 @@ watch(
   (book) => {
     if (book?.id) {
       form.title = book.title || "";
-      form.author = book.author || "";
       form.format = book.format || "бумажная";
       form.status = book.status || "не прочитано";
       form.rating = book.rating || 0;
       form.description = book.description || "";
+
+      if (book.author) {
+        if (typeof book.author === "object" && book.author !== null) {
+          form.author = book.author.name;
+        } else {
+          form.author = String(book.author);
+        }
+      } else {
+        form.author = "";
+      }
+
+      // Обработка издательства - всегда преобразуем в строку
+      if (book.publisher) {
+        if (typeof book.publisher === "object" && book.publisher !== null) {
+          form.publisher = book.publisher.name;
+        } else {
+          form.publisher = String(book.publisher);
+        }
+      } else {
+        form.publisher = "";
+      }
+
       if (book.cover) {
         coverPreview.value = book.cover;
         form.cover = book.cover;
       }
-      selectedPublisher.value = book.publisher || null;
     } else {
       resetForm();
     }
@@ -137,22 +155,17 @@ const handleClose = () => {
   emit("close");
 };
 
-// Отправка
+// В BookModal.vue, в функции handleSubmit добавьте:
 const handleSubmit = () => {
-  if (!form.title.trim() || !form.author.trim()) {
-    alert("Заполните название и автора");
-    return;
-  }
-
   const bookData = {
     title: form.title.trim(),
-    author: form.author.trim(),
+    author: form.author?.trim() || null,
     format: form.format,
     status: form.status,
     rating: form.status === "прочитано" ? form.rating : 0,
     description: form.description.trim(),
     cover: coverPreview.value,
-    publisher: selectedPublisher.value,
+    publisher: form.publisher?.trim() || null,
     isFavorite: props.bookToEdit?.isFavorite || false,
   };
 
