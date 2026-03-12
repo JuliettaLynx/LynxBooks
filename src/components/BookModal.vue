@@ -17,8 +17,10 @@
           <!--Форма -->
           <div class="flex gap-4 mt-4">
             <CoverUploader
-              v-model:cover-preview="coverPreview"
-              v-model:cover-file="form.cover"
+              v-model:coverPreview="coverPreview"
+              v-model:coverFile="coverFile"
+              v-model:originalImage="originalCover"
+              :bookId="bookToEdit?.id"
               @remove="removeCover"
             />
 
@@ -68,6 +70,12 @@ const props = defineProps({
 
 const emit = defineEmits(["close", "save"]);
 
+// Состояния для обложки
+const coverPreview = ref(null);
+const coverFile = ref(null);
+const originalCover = ref(null);
+
+// Форма
 const form = reactive({
   title: "",
   author: "",
@@ -76,10 +84,7 @@ const form = reactive({
   status: "не прочитано",
   rating: 0,
   description: "",
-  cover: null,
 });
-
-const coverPreview = ref(null);
 
 // Сброс формы
 const resetForm = () => {
@@ -89,9 +94,10 @@ const resetForm = () => {
   form.status = "не прочитано";
   form.rating = 0;
   form.description = "";
-  form.cover = null;
   form.publisher = "";
   coverPreview.value = null;
+  coverFile.value = null;
+  originalCover.value = null;
 };
 
 // Заполнение при редактировании
@@ -115,7 +121,7 @@ watch(
         form.author = "";
       }
 
-      // Обработка издательства - всегда преобразуем в строку
+      // Обработка издательства
       if (book.publisher) {
         if (typeof book.publisher === "object" && book.publisher !== null) {
           form.publisher = book.publisher.name;
@@ -126,9 +132,14 @@ watch(
         form.publisher = "";
       }
 
+      // Загружаем обложку
       if (book.cover) {
         coverPreview.value = book.cover;
-        form.cover = book.cover;
+      }
+
+      // Здесь можно загрузить originalCover из книги, если оно есть
+      if (book.originalCover) {
+        originalCover.value = book.originalCover;
       }
     } else {
       resetForm();
@@ -155,7 +166,7 @@ const handleClose = () => {
   emit("close");
 };
 
-// В BookModal.vue, в функции handleSubmit добавьте:
+// Отправка формы
 const handleSubmit = () => {
   const bookData = {
     title: form.title.trim(),
@@ -165,6 +176,7 @@ const handleSubmit = () => {
     rating: form.status === "прочитано" ? form.rating : 0,
     description: form.description.trim(),
     cover: coverPreview.value,
+    originalCover: originalCover.value,
     publisher: form.publisher?.trim() || null,
     isFavorite: props.bookToEdit?.isFavorite || false,
   };
@@ -177,9 +189,11 @@ const handleSubmit = () => {
   handleClose();
 };
 
+// Удаление обложки
 const removeCover = () => {
-  form.cover = null;
   coverPreview.value = null;
+  coverFile.value = null;
+  originalCover.value = null;
 };
 
 onUnmounted(() => {
