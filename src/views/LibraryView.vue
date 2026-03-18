@@ -34,8 +34,8 @@
               class="text-xl dark:text-gray-300"
             />
 
-            <!-- Кнопка переключения темы -->
-            <ThemeToggle />
+            <!-- Иконка профиля -->
+            <UserProfile />
           </div>
         </div>
 
@@ -119,13 +119,14 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
+import { auth } from "../firebase/config";
 import { useDebounceFn } from "@vueuse/core";
 import { useLibraryStore } from "../stores/library";
 import IconButton from "../components/IconButton.vue";
 import SearchInput from "../components/SearchInput.vue";
 import BookCard from "../components/BookCard.vue";
 import BookModal from "../components/BookModal.vue";
-import ThemeToggle from "../components/ThemeToggle.vue";
+import UserProfile from "../components/UserProfile.vue";
 
 const libraryStore = useLibraryStore();
 
@@ -138,9 +139,11 @@ const filterMode = ref(0); // 0: все, 1: избранные, 2: прочит�
 const isModalOpen = ref(false);
 const editingBook = ref(null);
 
-// Загружаем книги при монтировании компонента
 onMounted(() => {
-  libraryStore.loadBooks();
+  // Если пользователь вошел, а данные ещё не синхронизированы
+  if (auth.currentUser) {
+    libraryStore.loadBooks();
+  }
 });
 
 // Иконки для сортировки
@@ -229,19 +232,24 @@ const searched = computed(() => {
 });
 
 // Применение сортировки
+// Применение сортировки
 const filteredBooks = computed(() => {
   const sorted = [...searched.value];
 
   sorted.sort((a, b) => {
     switch (sortMode.value) {
       case 0: // название А-Я
-        return a.title.localeCompare(b.title);
+        return (a.title || "").localeCompare(b.title || "");
       case 1: // название Я-А
-        return b.title.localeCompare(a.title);
+        return (b.title || "").localeCompare(a.title || "");
       case 2: // автор А-Я
-        return a.author.localeCompare(b.author);
+        const authorA = a.author || "";
+        const authorB = b.author || "";
+        return authorA.localeCompare(authorB);
       case 3: // автор Я-А
-        return b.author.localeCompare(a.author);
+        const authorA2 = a.author || "";
+        const authorB2 = b.author || "";
+        return authorB2.localeCompare(authorA2);
       default:
         return 0;
     }

@@ -21,7 +21,7 @@
         @click="toggleDropdown"
         @mousedown.prevent
         type="button"
-        class="absolute right-2 top-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        class="absolute right-2 top-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
       >
         <svg
           class="w-5 h-5"

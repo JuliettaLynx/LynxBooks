@@ -19,4 +19,5 @@ export const publishersList = [
   { id: 18, name: "Эксмо" },
   { id: 19, name: "Комильфо" },
   { id: 20, name: "Freedom" },
+  { id: 21, name: "Marshmallow Books" },
 ];
