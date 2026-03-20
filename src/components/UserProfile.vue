@@ -3,16 +3,15 @@
     <!-- Иконка профиля -->
     <button
       @click.stop="toggleMenu"
-      class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg hover:ring-2 hover:ring-blue-300 transition-all"
+      class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg hover:ring-2 hover:ring-blue-300 transition-all overflow-hidden"
       :class="{ 'ring-2 ring-blue-400': isOpen }"
     >
-      <span v-if="user?.photoURL">
-        <img
-          :src="user.photoURL"
-          alt="avatar"
-          class="w-10 h-10 rounded-full object-cover"
-        />
-      </span>
+      <img
+        v-if="userAvatar"
+        :src="userAvatar"
+        alt="avatar"
+        class="w-full h-full object-cover"
+      />
       <span v-else>
         {{ user?.displayName?.charAt(0) || user?.email?.charAt(0) || "?" }}
       </span>
@@ -26,30 +25,33 @@
       <!-- Шапка профиля -->
       <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
         <div class="flex items-center gap-3">
-          <div
-            class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold overflow-hidden"
-          >
-            <img
-              v-if="user?.photoURL"
-              :src="user.photoURL"
-              class="w-full h-full object-cover"
-            />
-            <span v-else>{{
-              user?.displayName?.charAt(0) || user?.email?.charAt(0)
-            }}</span>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="font-bold truncate">
-              {{ user?.displayName || "Пользователь" }}
-            </p>
-            <p class="text-sm text-white/80 truncate">{{ user?.email }}</p>
-          </div>
-
           <button
             @click.stop="openSection('profile')"
             class="rounded-lg flex items-center gap-3 transition-colors"
           >
-            <span class="text-white">✎</span>
+            <div
+              class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold overflow-hidden"
+            >
+              <img
+                v-if="user?.photoURL"
+                :src="user.photoURL"
+                class="w-full h-full object-cover"
+              />
+              <span v-else>{{
+                user?.displayName?.charAt(0) || user?.email?.charAt(0)
+              }}</span>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <p class="font-bold truncate">
+                {{ user?.displayName || "Пользователь" }}
+              </p>
+              <p class="text-sm text-white/80 truncate">{{ user?.email }}</p>
+            </div>
+
+            <div class="w-12">
+              <span class="text-white relative">✎</span>
+            </div>
           </button>
         </div>
       </div>
@@ -181,33 +183,17 @@
             <!-- Редактирование профиля -->
             <div v-if="activeSection === 'profile'" class="space-y-4">
               <div class="flex justify-center">
-                <div class="relative">
-                  <div
-                    class="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-4xl overflow-hidden"
-                  >
-                    <img
-                      v-if="avatarPreview || user?.photoURL"
-                      :src="avatarPreview || user?.photoURL"
-                      class="w-full h-full object-cover"
-                    />
-                    <span v-else>{{
-                      user?.displayName?.charAt(0) || user?.email?.charAt(0)
-                    }}</span>
-                  </div>
-                  <button
-                    @click="triggerFileInput"
-                    class="absolute bottom-0 right-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white hover:bg-blue-600"
-                  >
-                    <span class="text-lg">✎</span>
-                  </button>
-                  <input
-                    ref="fileInput"
-                    type="file"
-                    accept="image/*"
-                    class="hidden"
-                    @change="handleAvatarUpload"
-                  />
-                </div>
+                <AvatarUploader
+                  :avatar-preview="avatarPreview"
+                  :original-avatar="originalAvatar"
+                  :display-name="editDisplayName"
+                  :email="user?.email"
+                  :user-id="user?.uid"
+                  @update:avatar-preview="avatarPreview = $event"
+                  @update:original-avatar="originalAvatar = $event"
+                  @update:avatar-file="avatarFile = $event"
+                  @remove="removeAvatar"
+                />
               </div>
 
               <div class="space-y-2">
@@ -323,7 +309,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import { useDark, useToggle, useColorMode } from "@vueuse/core";
+import { useColorMode } from "@vueuse/core";
 import { auth } from "../firebase/config";
 import {
   updateProfile,
@@ -334,6 +320,8 @@ import {
   signOut,
 } from "firebase/auth";
 import { useUserStore } from "../stores/user";
+import { usersDB } from "../db/index";
+import AvatarUploader from "./AvatarUploader.vue";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -352,13 +340,13 @@ const colorMode = useColorMode({
 // Состояние меню
 const isOpen = ref(false);
 const activeSection = ref(null);
-const fileInput = ref(null);
 const menuContainer = ref(null);
 
 // Данные для редактирования
 const editDisplayName = ref("");
 const avatarPreview = ref(null);
 const avatarFile = ref(null);
+const originalAvatar = ref(null);
 const editDailyGoal = ref(userStore.dailyGoal || 50);
 
 const passwordData = ref({
@@ -375,6 +363,9 @@ const sectionSuccess = ref("");
 // Цель
 const dailyGoal = ref(parseInt(localStorage.getItem("dailyGoal")) || 50);
 
+// Аватар пользователя
+const userAvatar = ref(null);
+
 // Заголовок модалки
 const modalTitle = computed(() => {
   switch (activeSection.value) {
@@ -389,6 +380,58 @@ const modalTitle = computed(() => {
   }
 });
 
+// Загрузка данных пользователя из IndexedDB
+const loadUserFromDB = async () => {
+  if (!user.value?.uid) return;
+
+  try {
+    const userData = await usersDB.get(user.value.uid);
+    if (userData) {
+      if (userData.avatar) {
+        userAvatar.value = userData.avatar;
+      }
+      if (userData.dailyGoal) {
+        dailyGoal.value = userData.dailyGoal;
+        userStore.setDailyGoal(userData.dailyGoal);
+      }
+      if (userData.originalAvatar) {
+        originalAvatar.value = userData.originalAvatar;
+      }
+    }
+  } catch (error) {
+    console.error("Ошибка загрузки пользователя из IndexedDB:", error);
+  }
+};
+
+// Сохранение данных пользователя в IndexedDB
+const saveUserToDB = async (updates) => {
+  if (!user.value?.uid) return;
+
+  try {
+    await usersDB.update(user.value.uid, {
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    });
+    console.log("Пользователь сохранен в IndexedDB");
+  } catch (error) {
+    // Если записи нет, создаем новую
+    if (
+      error.name === "NotFoundError" ||
+      error.message?.includes("not found")
+    ) {
+      await usersDB.add({
+        userId: user.value.uid,
+        displayName: user.value.displayName,
+        email: user.value.email,
+        ...updates,
+        createdAt: new Date().toISOString(),
+      });
+    } else {
+      console.error("Ошибка сохранения пользователя в IndexedDB:", error);
+    }
+  }
+};
+
 // Обработчик клика вне меню
 const handleClickOutside = (event) => {
   if (menuContainer.value && !menuContainer.value.contains(event.target)) {
@@ -399,15 +442,7 @@ const handleClickOutside = (event) => {
 // Методы для темы
 const setTheme = (theme) => {
   colorMode.value = theme;
-  if (theme === "auto") {
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    isDark.value = prefersDark;
-  } else {
-    isDark.value = theme === "dark";
-  }
-  isOpen.value = false; // Закрываем меню после выбора
+  isOpen.value = false;
 };
 
 // Методы меню
@@ -421,7 +456,8 @@ const openSection = (section) => {
 
   if (section === "profile") {
     editDisplayName.value = user.value?.displayName || "";
-    avatarPreview.value = null;
+    avatarPreview.value = userAvatar.value || null;
+    originalAvatar.value = null;
     avatarFile.value = null;
   } else if (section === "goal") {
     editDailyGoal.value = dailyGoal.value;
@@ -437,20 +473,10 @@ const closeSection = () => {
   activeSection.value = null;
 };
 
-const triggerFileInput = () => {
-  fileInput.value.click();
-};
-
-const handleAvatarUpload = (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    avatarFile.value = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      avatarPreview.value = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
+const removeAvatar = () => {
+  avatarPreview.value = null;
+  avatarFile.value = null;
+  originalAvatar.value = null;
 };
 
 const saveSection = async () => {
@@ -460,29 +486,40 @@ const saveSection = async () => {
 
   try {
     switch (activeSection.value) {
-      case "profile":
+      case "profile": {
         const updates = {};
+
         if (editDisplayName.value !== user.value?.displayName) {
           updates.displayName = editDisplayName.value;
         }
 
-        if (
-          avatarPreview.value &&
-          avatarPreview.value !== user.value?.photoURL
-        ) {
-          updates.photoURL = avatarPreview.value;
-        }
-
+        // Сохраняем только имя в Firebase Auth
         if (Object.keys(updates).length > 0) {
           await updateProfile(user.value, updates);
         }
+
+        // Сохраняем аватар и имя в IndexedDB (как обложки)
+        const dbUpdates = {
+          displayName: editDisplayName.value,
+          avatar: avatarPreview.value,
+          originalAvatar: originalAvatar.value,
+        };
+
+        await saveUserToDB(dbUpdates);
+
+        if (avatarPreview.value !== userAvatar.value) {
+          userAvatar.value = avatarPreview.value;
+        }
+
         sectionSuccess.value = "Профиль обновлён";
         break;
+      }
 
       case "goal":
         dailyGoal.value = editDailyGoal.value;
         localStorage.setItem("dailyGoal", editDailyGoal.value);
         userStore.setDailyGoal(editDailyGoal.value);
+        await saveUserToDB({ dailyGoal: editDailyGoal.value });
         sectionSuccess.value = "Цель обновлена";
         break;
 
@@ -546,6 +583,11 @@ const confirmDelete = () => {
 
 const deleteAccount = async () => {
   try {
+    // Удаляем данные пользователя из IndexedDB
+    if (user.value?.uid) {
+      await usersDB.delete(user.value.uid);
+    }
+
     await deleteUser(user.value);
     router.push("/auth");
   } catch (error) {
@@ -557,6 +599,7 @@ const deleteAccount = async () => {
 // Добавляем слушатель событий
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
+  loadUserFromDB();
 });
 
 onUnmounted(() => {
