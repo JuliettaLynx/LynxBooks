@@ -308,8 +308,9 @@
     </Teleport>
   </div>
 </template>
+
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useColorMode } from "@vueuse/core";
 import { auth } from "../firebase/config";
@@ -328,6 +329,34 @@ import AvatarUploader from "./AvatarUploader.vue";
 const router = useRouter();
 const userStore = useUserStore();
 const user = computed(() => auth.currentUser);
+
+watch(
+  () => userStore.userData,
+  (newData) => {
+    console.log("userStore.userData изменился:", newData);
+    if (newData) {
+      // Обновляем аватар
+      if (newData.avatar && newData.avatar !== userAvatar.value) {
+        console.log("🔄 Обновляем аватар из Firestore");
+        userAvatar.value = newData.avatar;
+        avatarPreview.value = newData.avatar;
+      }
+      // Обновляем имя
+      if (
+        newData.displayName &&
+        newData.displayName !== editDisplayName.value
+      ) {
+        editDisplayName.value = newData.displayName;
+      }
+      // Обновляем цель
+      if (newData.dailyGoal && newData.dailyGoal !== dailyGoal.value) {
+        dailyGoal.value = newData.dailyGoal;
+        editDailyGoal.value = newData.dailyGoal;
+      }
+    }
+  },
+  { immediate: true, deep: true },
+);
 
 // Тема
 const colorMode = useColorMode({
@@ -387,38 +416,24 @@ const loadUserFromDB = async () => {
   if (!user.value?.uid) return;
 
   try {
-    // Сначала загружаем из userStore (Firebase)
-    const firebaseData = userStore.userData;
-    if (firebaseData) {
-      if (firebaseData.avatar) {
-        userAvatar.value = firebaseData.avatar;
-        avatarPreview.value = firebaseData.avatar;
-      }
-      if (firebaseData.dailyGoal) {
-        dailyGoal.value = firebaseData.dailyGoal;
-        userStore.setDailyGoal(firebaseData.dailyGoal);
-        editDailyGoal.value = firebaseData.dailyGoal;
-      }
-      if (firebaseData.originalAvatar) {
-        originalAvatar.value = firebaseData.originalAvatar;
-      }
-      if (firebaseData.displayName) {
-        editDisplayName.value = firebaseData.displayName;
-      }
+    // Просто проверяем, есть ли данные в userStore
+    if (userStore.userData) {
+      console.log("Данные уже загружены из Firestore");
+      return;
     }
 
-    // Дополнительно загружаем из IndexedDB для офлайн-режима
+    // Если нет, пробуем загрузить из IndexedDB
     const userData = await usersDB.get(user.value.uid);
-    if (userData && !userAvatar.value) {
+    if (userData) {
       if (userData.avatar) {
         userAvatar.value = userData.avatar;
         avatarPreview.value = userData.avatar;
       }
-      if (userData.dailyGoal && !firebaseData?.dailyGoal) {
+      if (userData.dailyGoal) {
         dailyGoal.value = userData.dailyGoal;
         editDailyGoal.value = userData.dailyGoal;
       }
-      if (userData.displayName && !firebaseData?.displayName) {
+      if (userData.displayName) {
         editDisplayName.value = userData.displayName;
       }
     }
@@ -426,6 +441,7 @@ const loadUserFromDB = async () => {
     console.error("Ошибка загрузки пользователя:", error);
   }
 };
+
 // Сохранение данных пользователя в IndexedDB
 const saveUserToDB = async (updates) => {
   if (!user.value?.uid) return;

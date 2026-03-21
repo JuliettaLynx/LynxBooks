@@ -14,7 +14,7 @@ import { auth } from "./firebase/config";
 import TabBar from "./components/TabBar.vue";
 import LoadingSpinner from "./components/LoadingSpinner.vue";
 import { useLibraryStore } from "./stores/library";
-import { useUserStore } from "./stores/user"; // 👈 Добавляем импорт userStore
+import { useUserStore } from "./stores/user";
 
 const user = ref(null);
 const authReady = ref(false);
@@ -22,7 +22,6 @@ const authReady = ref(false);
 const libraryStore = useLibraryStore();
 const userStore = useUserStore();
 
-// Инициализация
 onMounted(() => {
   libraryStore.init();
 
