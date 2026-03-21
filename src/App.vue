@@ -14,11 +14,13 @@ import { auth } from "./firebase/config";
 import TabBar from "./components/TabBar.vue";
 import LoadingSpinner from "./components/LoadingSpinner.vue";
 import { useLibraryStore } from "./stores/library";
+import { useUserStore } from "./stores/user"; // 👈 Добавляем импорт userStore
 
 const user = ref(null);
 const authReady = ref(false);
 
 const libraryStore = useLibraryStore();
+const userStore = useUserStore();
 
 // Инициализация
 onMounted(() => {
@@ -30,11 +32,15 @@ onMounted(() => {
     authReady.value = true;
 
     if (currentUser) {
-      // Запускаем синхронизацию для всех сториков
+      // Запускаем синхронизацию для книг
       libraryStore.initSync(currentUser.uid);
+
+      // Запускаем синхронизацию для пользовательских данных
+      userStore.initUserSync(currentUser.uid);
     } else {
       // Очищаем данные при выходе
       libraryStore.cleanup();
+      userStore.cleanup();
     }
   });
 });

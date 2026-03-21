@@ -146,6 +146,16 @@ const emit = defineEmits([
 
 const userStore = useUserStore();
 
+// Сохранение в Firebase через userStore
+const syncToFirebase = async (updates) => {
+  try {
+    await userStore.saveUserToFirestore(updates);
+    console.log("Синхронизировано с Firebase");
+  } catch (error) {
+    console.error("Ошибка синхронизации с Firebase:", error);
+  }
+};
+
 // Инициалы для заглушки
 const initials = computed(() => {
   if (props.displayName) return props.displayName.charAt(0).toUpperCase();
@@ -197,16 +207,6 @@ const loadOriginalFromDB = async () => {
     console.error("Ошибка загрузки из IndexedDB:", error);
   } finally {
     isLoading.value = false;
-  }
-};
-
-// Сохранение в Firebase через userStore
-const syncToFirebase = async (updates) => {
-  try {
-    await userStore.saveUserToFirestore(updates);
-    console.log("Синхронизировано с Firebase");
-  } catch (error) {
-    console.error("Ошибка синхронизации с Firebase:", error);
   }
 };
 

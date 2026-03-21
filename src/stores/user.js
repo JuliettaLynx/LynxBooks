@@ -5,6 +5,7 @@ import {
   onSnapshot,
   updateDoc,
   setDoc,
+  getDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import { db, auth } from "../firebase/config";
@@ -34,7 +35,7 @@ export const useUserStore = defineStore("user", () => {
 
       unsubscribeUser = onSnapshot(
         userRef,
-        (snapshot) => {
+        async (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.data();
             userData.value = {
@@ -49,13 +50,18 @@ export const useUserStore = defineStore("user", () => {
             }
           } else {
             // Создаем запись если её нет
-            setDoc(userRef, {
-              email: auth.currentUser?.email,
+            console.log("Создаем документ пользователя в Firestore");
+            await setDoc(userRef, {
+              email: auth.currentUser?.email || "",
               displayName: auth.currentUser?.displayName || "",
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),
               dailyGoal: dailyGoal.value,
+              avatar: null,
+              originalAvatar: null,
             });
+
+            // После создания, данные придут в onSnapshot
           }
           loading.value = false;
         },
@@ -71,17 +77,36 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
-  // Сохранение данных пользователя в Firestore
+  // Сохранение данных пользователя в Firestore (с проверкой существования)
   const saveUserToFirestore = async (updates) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
 
     try {
       const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
-        ...updates,
-        updatedAt: serverTimestamp(),
-      });
+
+      // Проверяем существует ли документ
+      const docSnap = await getDoc(userRef);
+
+      if (docSnap.exists()) {
+        // Обновляем существующий документ
+        await updateDoc(userRef, {
+          ...updates,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        // Создаем новый документ
+        await setDoc(userRef, {
+          email: user.email,
+          displayName: user.displayName || "",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          dailyGoal: dailyGoal.value,
+          ...updates,
+        });
+      }
+
+      console.log("Данные пользователя сохранены в Firestore");
       return true;
     } catch (err) {
       console.error("Save user error:", err);
@@ -89,13 +114,12 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
-  // Обновление аватара (сохраняем URL в Firestore)
+  // Обновление аватара
   const updateAvatar = async (avatarBase64) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
 
     try {
-      // Сохраняем base64 в Firestore (как и обложки книг)
       await saveUserToFirestore({ avatar: avatarBase64 });
       return true;
     } catch (err) {
