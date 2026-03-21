@@ -151,7 +151,7 @@ const sortIcons = ["🔤↑", "🔤↓", "👤↑", "👤↓"];
 const sortIcon = computed(() => sortIcons[sortMode.value]);
 
 // Иконки для фильтра
-const filterIcons = ["📚", "⭐", "✅", "📖", "❌"];
+const filterIcons = ["📚", "❤️", "✅", "📖", "❌"];
 const filterIcon = computed(() => filterIcons[filterMode.value]);
 
 // Методы управления модалкой

@@ -24,67 +24,59 @@
     >
       <!-- Шапка профиля -->
       <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-        <div class="flex items-center gap-3">
-          <button
-            @click.stop="openSection('profile')"
-            class="rounded-lg flex items-center gap-3 transition-colors"
+        <button
+          @click.stop="openSection('profile')"
+          class="rounded-lg w-72 flex transition-colors"
+        >
+          <div
+            class="w-11 h-11 rounded-full border-2 border-white bg-white/20 flex items-center justify-center text-2xl font-bold overflow-hidden"
           >
-            <div
-              class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold overflow-hidden"
-            >
-              <img
-                v-if="userAvatar"
-                :src="userAvatar"
-                alt="avatar"
-                class="w-full h-full object-cover"
-              />
-              <span v-else>
-                {{
-                  user?.displayName?.charAt(0) || user?.email?.charAt(0) || "?"
-                }}
-              </span>
-            </div>
+            <img
+              v-if="userAvatar"
+              :src="userAvatar"
+              alt="avatar"
+              class="w-full h-full object-cover"
+            />
+            <span v-else>
+              {{
+                user?.displayName?.charAt(0) || user?.email?.charAt(0) || "?"
+              }}
+            </span>
+          </div>
 
-            <div class="flex-1 min-w-0">
-              <p class="font-bold truncate">
-                {{ user?.displayName || "Пользователь" }}
-              </p>
-              <p class="text-sm text-white/80 truncate">{{ user?.email }}</p>
-            </div>
+          <div class="flex-1 min-w-0 relative text-left left-3">
+            <p class="font-bold truncate">
+              {{ user?.displayName || "Пользователь" }}
+            </p>
+            <p class="text-sm text-white/80 truncate">{{ user?.email }}</p>
+          </div>
 
-            <div class="w-12">
-              <span class="text-white relative">✎</span>
-            </div>
-          </button>
-        </div>
+          <div class="w-12">
+            <span class="text-white relative top-1 text-xl">✎</span>
+          </div>
+        </button>
       </div>
 
       <!-- Статистика -->
       <div class="p-4 border-b border-gray-200 dark:border-gray-700">
         <div class="flex justify-between items-center">
-          <span class="text-sm text-gray-600 dark:text-gray-400"
-            >Цель на день:</span
-          >
+          <span class="text-gray-600 dark:text-gray-400">Цель на день:</span>
 
           <button
             @click.stop="openSection('goal')"
             class="rounded-lg flex items-center gap-3 transition-colors"
           >
-            <span class="font-bold text-blue-600 dark:text-blue-400"
+            <span
+              class="font-bold relative right-5 text-blue-600 dark:text-blue-400"
               >{{ dailyGoal || 0 }} стр.</span
             >
-            <span class="text-gray-400">✎</span>
           </button>
         </div>
       </div>
 
       <!-- Настройки темы -->
       <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-        <p
-          class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3"
-        >
-          Оформление
-        </p>
+        <p class="text-gray-500 dark:text-gray-400 mb-3">Оформление:</p>
         <div class="grid grid-cols-3 gap-2">
           <button
             @click.stop="setTheme('light')"
@@ -131,29 +123,30 @@
       <div class="p-2">
         <button
           @click.stop="openSection('password')"
-          class="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-3 transition-colors"
+          class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-3 transition-colors"
         >
-          <span class="text-xl">🔒</span>
-          <span class="flex-1 dark:text-gray-200">Сменить пароль</span>
-          <span class="text-gray-400">➔</span>
+          <span class="text-base">🔒</span>
+          <span class="flex-1 text-base text-gray-600 dark:text-gray-400"
+            >Сменить пароль</span
+          >
         </button>
 
         <div class="border-t border-gray-200 dark:border-gray-700 my-2"></div>
 
         <button
           @click.stop="handleLogout"
-          class="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-3 text-red-600 dark:text-red-400 transition-colors"
+          class="w-full px-4 py-1 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-3 text-red-600 dark:text-red-400 transition-colors"
         >
-          <span class="text-xl">🚪</span>
-          <span class="flex-1">Выйти</span>
+          <span class="text-base">🚪</span>
+          <span class="flex-1 text-base">Выйти</span>
         </button>
 
         <button
           @click.stop="confirmDelete"
-          class="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center gap-3 text-red-600 dark:text-red-400 transition-colors"
+          class="w-full px-4 py-1 text-left hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center gap-3 text-red-600 dark:text-red-400 transition-colors"
         >
-          <span class="text-xl">🗑️</span>
-          <span class="flex-1">Удалить аккаунт</span>
+          <span class="text-base">🗑️</span>
+          <span class="flex-1 text-base">Удалить аккаунт</span>
         </button>
       </div>
     </div>
@@ -188,14 +181,15 @@
               <div class="flex justify-center">
                 <AvatarUploader
                   :avatar-preview="avatarPreview"
-                  :original-avatar="originalAvatar"
+                  :avatar-file="avatarFile"
+                  :original-image="originalAvatar"
+                  :user-id="user?.uid"
                   :display-name="editDisplayName"
                   :email="user?.email"
-                  :user-id="user?.uid"
-                  @update:avatar-preview="avatarPreview = $event"
-                  @update:original-avatar="originalAvatar = $event"
+                  @update:avatar-preview="handleAvatarPreviewUpdate"
                   @update:avatar-file="avatarFile = $event"
-                  @remove="removeAvatar"
+                  @update:original-image="originalAvatar = $event"
+                  @remove="handleAvatarRemove"
                 />
               </div>
 
@@ -239,6 +233,9 @@
                 <input
                   v-model="passwordData.current"
                   type="password"
+                  autocomplete="off"
+                  readonly
+                  onfocus="this.removeAttribute('readonly')"
                   class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
                 />
               </div>
@@ -330,34 +327,6 @@ const router = useRouter();
 const userStore = useUserStore();
 const user = computed(() => auth.currentUser);
 
-watch(
-  () => userStore.userData,
-  (newData) => {
-    console.log("userStore.userData изменился:", newData);
-    if (newData) {
-      // Обновляем аватар
-      if (newData.avatar && newData.avatar !== userAvatar.value) {
-        console.log("🔄 Обновляем аватар из Firestore");
-        userAvatar.value = newData.avatar;
-        avatarPreview.value = newData.avatar;
-      }
-      // Обновляем имя
-      if (
-        newData.displayName &&
-        newData.displayName !== editDisplayName.value
-      ) {
-        editDisplayName.value = newData.displayName;
-      }
-      // Обновляем цель
-      if (newData.dailyGoal && newData.dailyGoal !== dailyGoal.value) {
-        dailyGoal.value = newData.dailyGoal;
-        editDailyGoal.value = newData.dailyGoal;
-      }
-    }
-  },
-  { immediate: true, deep: true },
-);
-
 // Тема
 const colorMode = useColorMode({
   emitAuto: true,
@@ -378,7 +347,7 @@ const editDisplayName = ref("");
 const avatarPreview = ref(null);
 const avatarFile = ref(null);
 const originalAvatar = ref(null);
-const editDailyGoal = ref(userStore.dailyGoal || 50);
+const editDailyGoal = ref(50);
 
 const passwordData = ref({
   current: "",
@@ -392,10 +361,11 @@ const sectionError = ref("");
 const sectionSuccess = ref("");
 
 // Цель
-const dailyGoal = ref(parseInt(localStorage.getItem("dailyGoal")) || 50);
+const dailyGoal = ref(50);
 
 // Аватар пользователя
 const userAvatar = ref(null);
+const hasAvatarChanged = ref(false);
 
 // Заголовок модалки
 const modalTitle = computed(() => {
@@ -411,30 +381,64 @@ const modalTitle = computed(() => {
   }
 });
 
-// Загрузка данных пользователя из userStore
-const loadUserFromDB = async () => {
+// Обработчики AvatarUploader
+const handleAvatarPreviewUpdate = (newPreview) => {
+  avatarPreview.value = newPreview;
+  hasAvatarChanged.value = true;
+};
+
+const handleAvatarRemove = () => {
+  avatarPreview.value = null;
+  avatarFile.value = null;
+  originalAvatar.value = null;
+  userAvatar.value = null;
+  hasAvatarChanged.value = true;
+};
+
+// Обновляем загрузку пользовательских данных
+const loadUserData = async () => {
   if (!user.value?.uid) return;
 
   try {
-    // Просто проверяем, есть ли данные в userStore
-    if (userStore.userData) {
-      console.log("Данные уже загружены из Firestore");
-      return;
+    // Загружаем из userStore или IndexedDB
+    let userData = userStore.userData;
+
+    if (!userData) {
+      userData = await usersDB.get(user.value.uid);
     }
 
-    // Если нет, пробуем загрузить из IndexedDB
-    const userData = await usersDB.get(user.value.uid);
     if (userData) {
+      // Аватар
       if (userData.avatar) {
         userAvatar.value = userData.avatar;
         avatarPreview.value = userData.avatar;
       }
+
+      // Оригинальный аватар (для редактирования)
+      if (userData.originalAvatar) {
+        originalAvatar.value = userData.originalAvatar;
+      }
+
+      // Цель
       if (userData.dailyGoal) {
         dailyGoal.value = userData.dailyGoal;
         editDailyGoal.value = userData.dailyGoal;
       }
+
+      // Имя
       if (userData.displayName) {
         editDisplayName.value = userData.displayName;
+      } else if (user.value?.displayName) {
+        editDisplayName.value = user.value.displayName;
+      }
+    } else {
+      // Если нет данных, берем из Firebase Auth
+      if (user.value?.displayName) {
+        editDisplayName.value = user.value.displayName;
+      }
+      if (user.value?.photoURL) {
+        userAvatar.value = user.value.photoURL;
+        avatarPreview.value = user.value.photoURL;
       }
     }
   } catch (error) {
@@ -464,6 +468,7 @@ const saveUserToDB = async (updates) => {
     console.log("Пользователь сохранен в IndexedDB");
   } catch (error) {
     console.error("Ошибка сохранения пользователя в IndexedDB:", error);
+    throw error;
   }
 };
 
@@ -488,10 +493,14 @@ const toggleMenu = () => {
 const openSection = (section) => {
   activeSection.value = section;
   isOpen.value = false;
+  hasAvatarChanged.value = false;
 
   if (section === "profile") {
     editDisplayName.value = user.value?.displayName || "";
-    avatarPreview.value = userAvatar.value || null;
+    // Загружаем текущий аватар для отображения в редакторе
+    if (userAvatar.value) {
+      avatarPreview.value = userAvatar.value;
+    }
     originalAvatar.value = null;
     avatarFile.value = null;
   } else if (section === "goal") {
@@ -506,13 +515,7 @@ const openSection = (section) => {
 
 const closeSection = () => {
   activeSection.value = null;
-};
-
-const removeAvatar = () => {
-  avatarPreview.value = null;
-  avatarFile.value = null;
-  originalAvatar.value = null;
-  userAvatar.value = null;
+  hasAvatarChanged.value = false;
 };
 
 const saveSection = async () => {
@@ -523,6 +526,8 @@ const saveSection = async () => {
   try {
     switch (activeSection.value) {
       case "profile": {
+        const updates = {};
+
         // Обновляем имя в Firebase Auth если изменилось
         if (editDisplayName.value !== user.value?.displayName) {
           await updateProfile(user.value, {
@@ -530,26 +535,24 @@ const saveSection = async () => {
           });
         }
 
-        // Сохраняем в IndexedDB
-        const dbUpdates = {
-          displayName: editDisplayName.value,
-        };
-
-        // Если аватар был изменен через AvatarUploader, сохраняем его
-        if (
-          avatarPreview.value !== null &&
-          avatarPreview.value !== userAvatar.value
-        ) {
-          dbUpdates.avatar = avatarPreview.value;
-          userAvatar.value = avatarPreview.value;
+        // Если аватар был изменен
+        if (hasAvatarChanged.value) {
+          if (avatarPreview.value) {
+            // Сохраняем новый аватар
+            await userStore.updateAvatar(
+              avatarPreview.value,
+              originalAvatar.value,
+            );
+            userAvatar.value = avatarPreview.value;
+          } else {
+            // Удаляем аватар
+            await userStore.updateAvatar(null, null);
+            userAvatar.value = null;
+          }
+        } else if (editDisplayName.value !== user.value?.displayName) {
+          // Если изменилось только имя
+          await userStore.updateProfile({ displayName: editDisplayName.value });
         }
-
-        // Сохраняем оригинал если есть
-        if (originalAvatar.value) {
-          dbUpdates.originalAvatar = originalAvatar.value;
-        }
-
-        await saveUserToDB(dbUpdates);
 
         sectionSuccess.value = "Профиль обновлён";
         break;
@@ -584,19 +587,10 @@ const saveSection = async () => {
 
     setTimeout(() => {
       closeSection();
-    }, 1500);
+    }, 1000);
   } catch (error) {
     console.error("Save error:", error);
-    switch (error.code) {
-      case "auth/wrong-password":
-        sectionError.value = "Неверный текущий пароль";
-        break;
-      case "auth/requires-recent-login":
-        sectionError.value = "Пожалуйста, войдите снова";
-        break;
-      default:
-        sectionError.value = error.message || "Произошла ошибка";
-    }
+    sectionError.value = error.message || "Произошла ошибка";
   } finally {
     sectionLoading.value = false;
   }
@@ -627,7 +621,6 @@ const deleteAccount = async () => {
     if (user.value?.uid) {
       await usersDB.delete(user.value.uid);
     }
-
     await deleteUser(user.value);
     router.push("/auth");
   } catch (error) {
@@ -636,10 +629,34 @@ const deleteAccount = async () => {
   }
 };
 
+// Следим за изменениями в userStore
+watch(
+  () => userStore.userData,
+  (newData) => {
+    if (newData) {
+      if (newData.avatar && newData.avatar !== userAvatar.value) {
+        userAvatar.value = newData.avatar;
+        avatarPreview.value = newData.avatar;
+      }
+      if (
+        newData.displayName &&
+        newData.displayName !== editDisplayName.value
+      ) {
+        editDisplayName.value = newData.displayName;
+      }
+      if (newData.dailyGoal && newData.dailyGoal !== dailyGoal.value) {
+        dailyGoal.value = newData.dailyGoal;
+        editDailyGoal.value = newData.dailyGoal;
+      }
+    }
+  },
+  { immediate: true, deep: true },
+);
+
 // Добавляем слушатель событий
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
-  loadUserFromDB();
+  loadUserData();
 });
 
 onUnmounted(() => {
