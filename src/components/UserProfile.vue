@@ -382,34 +382,50 @@ const modalTitle = computed(() => {
   }
 });
 
-// Загрузка данных пользователя из IndexedDB
+// Загрузка данных пользователя из userStore
 const loadUserFromDB = async () => {
   if (!user.value?.uid) return;
 
   try {
+    // Сначала загружаем из userStore (Firebase)
+    const firebaseData = userStore.userData;
+    if (firebaseData) {
+      if (firebaseData.avatar) {
+        userAvatar.value = firebaseData.avatar;
+        avatarPreview.value = firebaseData.avatar;
+      }
+      if (firebaseData.dailyGoal) {
+        dailyGoal.value = firebaseData.dailyGoal;
+        userStore.setDailyGoal(firebaseData.dailyGoal);
+        editDailyGoal.value = firebaseData.dailyGoal;
+      }
+      if (firebaseData.originalAvatar) {
+        originalAvatar.value = firebaseData.originalAvatar;
+      }
+      if (firebaseData.displayName) {
+        editDisplayName.value = firebaseData.displayName;
+      }
+    }
+
+    // Дополнительно загружаем из IndexedDB для офлайн-режима
     const userData = await usersDB.get(user.value.uid);
-    if (userData) {
+    if (userData && !userAvatar.value) {
       if (userData.avatar) {
         userAvatar.value = userData.avatar;
         avatarPreview.value = userData.avatar;
       }
-      if (userData.dailyGoal) {
+      if (userData.dailyGoal && !firebaseData?.dailyGoal) {
         dailyGoal.value = userData.dailyGoal;
-        userStore.setDailyGoal(userData.dailyGoal);
         editDailyGoal.value = userData.dailyGoal;
       }
-      if (userData.originalAvatar) {
-        originalAvatar.value = userData.originalAvatar;
-      }
-      if (userData.displayName) {
+      if (userData.displayName && !firebaseData?.displayName) {
         editDisplayName.value = userData.displayName;
       }
     }
   } catch (error) {
-    console.error("Ошибка загрузки пользователя из IndexedDB:", error);
+    console.error("Ошибка загрузки пользователя:", error);
   }
 };
-
 // Сохранение данных пользователя в IndexedDB
 const saveUserToDB = async (updates) => {
   if (!user.value?.uid) return;

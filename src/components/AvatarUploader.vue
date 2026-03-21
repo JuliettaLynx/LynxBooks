@@ -5,6 +5,7 @@
       <div
         class="w-28 h-28 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-4xl text-gray-400 dark:text-gray-500 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border-2 border-dashed border-gray-300 dark:border-gray-600 overflow-hidden"
         @click="openCropperModal"
+        @touchstart.prevent="openCropperModal"
       >
         <img
           v-if="avatarPreview"
@@ -21,8 +22,9 @@
       <button
         v-if="avatarPreview"
         type="button"
-        class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+        class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors z-10"
         @click.stop="handleRemove"
+        @touchstart.stop="handleRemove"
       >
         ✕
       </button>
@@ -32,11 +34,14 @@
     <Teleport to="body">
       <div
         v-if="showCropper"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 dark:bg-opacity-70"
+        class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-50 dark:bg-opacity-70"
         @click.self="closeCropperModal"
+        @touchstart.self="closeCropperModal"
       >
         <div
           class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl flex flex-col max-h-[90vh]"
+          @click.stop
+          @touchstart.stop
         >
           <!-- Заголовок -->
           <div
@@ -47,7 +52,8 @@
             </h2>
             <button
               @click="closeCropperModal"
-              class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              @touchstart="closeCropperModal"
+              class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-2"
             >
               ✕
             </button>
@@ -57,7 +63,8 @@
           <div class="px-4 pt-2 flex items-center gap-2">
             <button
               @click="uploadNewImage"
-              class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              @touchstart="uploadNewImage"
+              class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 py-2"
             >
               Загрузить изображение
             </button>
@@ -67,6 +74,7 @@
           <div class="flex-1 overflow-auto p-4">
             <div
               class="relative bg-gray-100 dark:bg-gray-900 rounded-lg flex items-center justify-center min-h-[400px]"
+              style="touch-action: none"
             >
               <cropper
                 v-if="originalImageSrc"
@@ -79,6 +87,7 @@
                 @ready="handleCropperReady"
                 @change="handleCropChange"
               />
+              <div v-else class="text-gray-500">Выберите изображение</div>
             </div>
           </div>
 
@@ -88,13 +97,16 @@
           >
             <button
               @click="closeCropperModal"
+              @touchstart="closeCropperModal"
               class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
               Отмена
             </button>
             <button
               @click="applyCrop"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              @touchstart="applyCrop"
+              :disabled="!originalImageSrc"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
               Применить
             </button>
@@ -106,10 +118,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { Cropper } from "vue-advanced-cropper";
 import "vue-advanced-cropper/dist/style.css";
 import { usersDB } from "../db/index";
+import { useUserStore } from "../stores/user";
 
 // Пропсы и эмиты
 const props = defineProps({
@@ -130,6 +143,8 @@ const emit = defineEmits([
   "update:originalAvatar",
   "remove",
 ]);
+
+const userStore = useUserStore();
 
 // Инициалы для заглушки
 const initials = computed(() => {
@@ -159,6 +174,7 @@ const resizeImageConfig = {
   minScale: 0.3,
   maxScale: 5,
   wheel: true,
+  touch: true,
 };
 
 // Константы
@@ -184,12 +200,22 @@ const loadOriginalFromDB = async () => {
   }
 };
 
-// Сохранение оригинала в IndexedDB
+// Сохранение в Firebase через userStore
+const syncToFirebase = async (updates) => {
+  try {
+    await userStore.saveUserToFirestore(updates);
+    console.log("Синхронизировано с Firebase");
+  } catch (error) {
+    console.error("Ошибка синхронизации с Firebase:", error);
+  }
+};
+
+// Сохранение оригинала в IndexedDB и Firebase
 const saveOriginalToDB = async (imageData) => {
   if (!props.userId) return;
 
   try {
-    // Проверяем существует ли запись
+    // Сохраняем в IndexedDB
     const existing = await usersDB.get(props.userId);
     if (existing) {
       await usersDB.update(props.userId, {
@@ -204,38 +230,66 @@ const saveOriginalToDB = async (imageData) => {
         createdAt: new Date().toISOString(),
       });
     }
-    console.log("Оригинал аватара сохранен в IndexedDB");
+
+    // Синхронизируем с Firebase
+    await syncToFirebase({ originalAvatar: imageData });
+
+    console.log("Оригинал аватара сохранен");
   } catch (error) {
-    console.error("Ошибка сохранения в IndexedDB:", error);
+    console.error("Ошибка сохранения оригинала:", error);
   }
 };
 
-// Удаление оригинала из IndexedDB
-const removeOriginalFromDB = async () => {
+// Сохранение аватара в IndexedDB и Firebase
+const saveAvatarToDB = async (avatarData) => {
   if (!props.userId) return;
 
   try {
-    await usersDB.update(props.userId, {
-      originalAvatar: null,
-    });
-    console.log("Оригинал аватара удален из IndexedDB");
+    // Сохраняем в IndexedDB
+    const existing = await usersDB.get(props.userId);
+    if (existing) {
+      await usersDB.update(props.userId, {
+        avatar: avatarData,
+      });
+    } else {
+      await usersDB.add({
+        userId: props.userId,
+        avatar: avatarData,
+        originalAvatar: originalImageSrc.value,
+        displayName: props.displayName || "",
+        email: props.email || "",
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    // Синхронизируем с Firebase
+    await syncToFirebase({ avatar: avatarData });
+
+    console.log("Аватар сохранен и синхронизирован");
   } catch (error) {
-    console.error("Ошибка удаления из IndexedDB:", error);
+    console.error("Ошибка сохранения аватара:", error);
   }
 };
 
-// При монтировании загружаем сохраненный оригинал
-onMounted(() => {
-  loadOriginalFromDB();
-});
+// Удаление аватара
+const removeAvatarFromDB = async () => {
+  if (!props.userId) return;
 
-// Следим за изменением userId
-watch(
-  () => props.userId,
-  () => {
-    loadOriginalFromDB();
-  },
-);
+  try {
+    // Удаляем из IndexedDB
+    await usersDB.update(props.userId, {
+      avatar: null,
+      originalAvatar: null,
+    });
+
+    // Синхронизируем с Firebase
+    await syncToFirebase({ avatar: null, originalAvatar: null });
+
+    console.log("Аватар удален и синхронизирован");
+  } catch (error) {
+    console.error("Ошибка удаления аватара:", error);
+  }
+};
 
 // Валидация изображения
 const validateImage = (file, base64) => {
@@ -258,6 +312,7 @@ const uploadNewImage = () => {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
+  input.capture = "environment";
 
   input.onchange = async (e) => {
     const file = e.target.files[0];
@@ -270,10 +325,7 @@ const uploadNewImage = () => {
       if (!validateImage(file, imageData)) return;
 
       originalImageSrc.value = imageData;
-
-      // Сохраняем в IndexedDB
       await saveOriginalToDB(imageData);
-
       showCropper.value = true;
     };
 
@@ -285,6 +337,7 @@ const uploadNewImage = () => {
 
 // Открытие модального окна
 const openCropperModal = () => {
+  console.log("openCropperModal вызван");
   if (props.originalAvatar || props.avatarPreview) {
     originalImageSrc.value = props.originalAvatar || props.avatarPreview;
     showCropper.value = true;
@@ -337,29 +390,8 @@ const applyCrop = async () => {
 
   const croppedImage = finalCanvas.toDataURL("image/jpeg", 0.9);
 
-  // Сохраняем обрезанный аватар в IndexedDB
-  if (props.userId) {
-    try {
-      const existing = await usersDB.get(props.userId);
-      if (existing) {
-        await usersDB.update(props.userId, {
-          avatar: croppedImage,
-        });
-      } else {
-        await usersDB.add({
-          userId: props.userId,
-          avatar: croppedImage,
-          originalAvatar: originalImageSrc.value,
-          displayName: props.displayName || "",
-          email: props.email || "",
-          createdAt: new Date().toISOString(),
-        });
-      }
-      console.log("Аватар сохранен в IndexedDB");
-    } catch (error) {
-      console.error("Ошибка сохранения аватара в IndexedDB:", error);
-    }
-  }
+  // Сохраняем в IndexedDB и Firebase
+  await saveAvatarToDB(croppedImage);
 
   emit("update:originalAvatar", originalImageSrc.value);
   emit("update:avatarPreview", croppedImage);
@@ -383,6 +415,8 @@ const closeCropperModal = () => {
 };
 
 const handleRemove = async () => {
+  await removeAvatarFromDB();
+
   emit("remove");
   emit("update:avatarPreview", null);
   emit("update:avatarFile", null);
@@ -390,20 +424,37 @@ const handleRemove = async () => {
 
   originalImageSrc.value = null;
   currentCoordinates.value = null;
-
-  // Удаляем из IndexedDB
-  if (props.userId) {
-    try {
-      await usersDB.update(props.userId, {
-        avatar: null,
-        originalAvatar: null,
-      });
-      console.log("Аватар удален из IndexedDB");
-    } catch (error) {
-      console.error("Ошибка удаления аватара из IndexedDB:", error);
-    }
-  }
 };
+
+// Блокировка скролла
+watch(showCropper, (isOpen) => {
+  if (isOpen) {
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    document.body.style.top = `-${window.scrollY}px`;
+  } else {
+    const scrollY = document.body.style.top;
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.width = "";
+    document.body.style.top = "";
+    window.scrollTo(0, parseInt(scrollY || "0") * -1);
+  }
+});
+
+// При монтировании загружаем сохраненный оригинал
+onMounted(() => {
+  loadOriginalFromDB();
+});
+
+// Следим за изменением userId
+watch(
+  () => props.userId,
+  () => {
+    loadOriginalFromDB();
+  },
+);
 
 // Вотчер для props.originalAvatar
 watch(
@@ -413,6 +464,13 @@ watch(
   },
   { immediate: true },
 );
+
+onUnmounted(() => {
+  document.body.style.overflow = "";
+  document.body.style.position = "";
+  document.body.style.width = "";
+  document.body.style.top = "";
+});
 </script>
 
 <style scoped>
@@ -422,13 +480,17 @@ watch(
   background: transparent;
 }
 
-/* Стили для рамки */
+@media (max-width: 640px) {
+  .cropper {
+    height: 300px;
+  }
+}
+
 :deep(.vue-advanced-cropper__stencil) {
   border: 2px solid #3b82f6;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
 }
 
-/* Ручки изменения размера */
 :deep(.vue-advanced-cropper__handler) {
   background-color: white;
   border: 2px solid #3b82f6;
@@ -437,7 +499,13 @@ watch(
   border-radius: 2px;
 }
 
-/* Темная тема */
+@media (max-width: 640px) {
+  :deep(.vue-advanced-cropper__handler) {
+    width: 24px;
+    height: 24px;
+  }
+}
+
 :deep(.dark .vue-advanced-cropper__stencil) {
   border-color: #60a5fa;
 }
