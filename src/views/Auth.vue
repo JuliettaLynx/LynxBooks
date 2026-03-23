@@ -213,28 +213,43 @@ const handleSubmit = async () => {
   } catch (err) {
     console.error("Auth error:", err);
 
-    // Понятные сообщения об ошибках
-    switch (err.code) {
-      case "auth/user-not-found":
-        error.value = "Пользователь не найден";
-        break;
-      case "auth/wrong-password":
-        error.value = "Неверный пароль";
-        break;
-      case "auth/email-already-in-use":
-        error.value = "Этот email уже используется";
-        break;
-      case "auth/weak-password":
-        error.value = "Пароль должен быть минимум 6 символов";
-        break;
-      case "auth/invalid-email":
-        error.value = "Некорректный email";
-        break;
-      case "auth/popup-closed-by-user":
-        error.value = "Вход через Google отменён";
-        break;
-      default:
-        error.value = err.message || "Произошла ошибка. Попробуйте снова";
+    const errorMessages = {
+      // Email/Password errors
+      "auth/user-not-found": "Пользователь с таким email не найден",
+      "auth/wrong-password": "Неверный пароль",
+      "auth/email-already-in-use": "Этот email уже зарегистрирован",
+      "auth/weak-password": "Пароль должен содержать минимум 6 символов",
+      "auth/invalid-email": "Некорректный формат email",
+      "auth/invalid-credential": "Неверные учетные данные",
+      "auth/too-many-requests": "Слишком много попыток. Попробуйте позже",
+
+      // User disabled
+      "auth/user-disabled": "Аккаунт отключен",
+
+      // Network errors
+      "auth/network-request-failed": "Ошибка сети. Проверьте подключение",
+
+      // Password reset
+      "auth/requires-recent-login": "Требуется повторный вход",
+
+      // Google auth errors
+      "auth/popup-closed-by-user": "Вход через Google отменен",
+      "auth/popup-blocked": "Всплывающее окно заблокировано браузером",
+      "auth/cancelled-popup-request": "Запрос входа отменен",
+
+      // Session expired
+      "auth/session-expired": "Сессия истекла. Войдите снова",
+
+      // Default
+      default: "Произошла ошибка. Попробуйте снова",
+    };
+
+    // Проверяем, есть ли код ошибки Firebase
+    if (err.code && errorMessages[err.code]) {
+      error.value = errorMessages[err.code];
+    } else {
+      // Если это не Firebase ошибка или неизвестный код
+      error.value = err.message || errorMessages.default;
     }
   } finally {
     loading.value = false;

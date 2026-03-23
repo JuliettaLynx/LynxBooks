@@ -29,7 +29,7 @@
           class="rounded-lg w-72 flex transition-colors"
         >
           <div
-            class="w-11 h-11 rounded-full border-2 border-white bg-white/20 flex items-center justify-center text-2xl font-bold overflow-hidden"
+            class="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold overflow-hidden"
           >
             <img
               v-if="userAvatar"
@@ -52,7 +52,7 @@
           </div>
 
           <div class="w-12">
-            <span class="text-white relative top-1 text-xl">✎</span>
+            <span class="text-white relative top-1 left-2 text-xl">✎</span>
           </div>
         </button>
       </div>
@@ -67,7 +67,7 @@
             class="rounded-lg flex items-center gap-3 transition-colors"
           >
             <span
-              class="font-bold relative right-5 text-blue-600 dark:text-blue-400"
+              class="font-bold relative right-1 text-blue-600 dark:text-blue-400"
               >{{ dailyGoal || 0 }} стр.</span
             >
           </button>
@@ -125,7 +125,6 @@
           @click.stop="openSection('password')"
           class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-3 transition-colors"
         >
-          <span class="text-base">🔒</span>
           <span class="flex-1 text-base text-gray-600 dark:text-gray-400"
             >Сменить пароль</span
           >
@@ -137,7 +136,6 @@
           @click.stop="handleLogout"
           class="w-full px-4 py-1 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-3 text-red-600 dark:text-red-400 transition-colors"
         >
-          <span class="text-base">🚪</span>
           <span class="flex-1 text-base">Выйти</span>
         </button>
 
@@ -145,7 +143,6 @@
           @click.stop="confirmDelete"
           class="w-full px-4 py-1 text-left hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center gap-3 text-red-600 dark:text-red-400 transition-colors"
         >
-          <span class="text-base">🗑️</span>
           <span class="flex-1 text-base">Удалить аккаунт</span>
         </button>
       </div>
@@ -526,8 +523,6 @@ const saveSection = async () => {
   try {
     switch (activeSection.value) {
       case "profile": {
-        const updates = {};
-
         // Обновляем имя в Firebase Auth если изменилось
         if (editDisplayName.value !== user.value?.displayName) {
           await updateProfile(user.value, {

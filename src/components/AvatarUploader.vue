@@ -162,7 +162,7 @@ const resizeImageConfig = {
 };
 
 // Константы
-const MAX_SIZE = 2 * 1024 * 1024; // 2 МБ для аватара
+const MAX_SIZE = 1 * 1024 * 1024; // 1 МБ для аватара
 const TARGET_SIZE = { width: 200, height: 200 }; // 200x200 для аватара
 
 // Загрузка оригинала из IndexedDB

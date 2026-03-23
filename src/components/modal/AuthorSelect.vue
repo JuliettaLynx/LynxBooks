@@ -13,7 +13,6 @@
         @keydown.enter.prevent="selectCurrent"
         @keydown.esc="closeDropdown"
         @blur="handleBlur"
-        @keyup="handleKeyUp"
         :placeholder="placeholder"
         class="w-full text-sm mt-1.5 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-600 bg-white dark:bg-gray-700 dark:text-white"
       />
@@ -119,21 +118,7 @@ const searchQuery = ref("");
 const isOpen = ref(false);
 const highlightedIndex = ref(-1);
 const isSelecting = ref(false);
-const componentRef = ref(null);
-
-// Добавляем обработчик keyup для мобильных
-const handleKeyUp = () => {
-  // Принудительно обновляем список на мобильных
-  nextTick();
-};
-
-const closeDropdown = () => {
-  isOpen.value = false;
-};
-
-const handleFocus = () => {
-  isOpen.value = true;
-};
+const skipNextWatch = ref(false);
 
 // Функция для генерации вариантов имени
 const generateNameVariants = (fullName) => {
@@ -170,6 +155,7 @@ const filteredAuthors = computed(() => {
     let bestMatch = null;
     let bestMatchType = null;
     let bestMatchVariant = null;
+    let bestMatchIndex = Infinity;
 
     variants.forEach((variant) => {
       const variantLower = variant.text.toLowerCase();
@@ -189,12 +175,12 @@ const filteredAuthors = computed(() => {
         const matchIndex = variantLower.indexOf(query);
         if (
           !bestMatch ||
-          (bestMatchType === "contains" && matchIndex < bestMatch.matchIndex)
+          (bestMatchType === "contains" && matchIndex < bestMatchIndex)
         ) {
           bestMatch = author;
           bestMatchType = "contains";
           bestMatchVariant = variant;
-          bestMatch.matchIndex = matchIndex;
+          bestMatchIndex = matchIndex;
         }
       }
     });
@@ -266,26 +252,61 @@ const selectAuthor = (authorName) => {
 
 // Обработка ввода
 const handleInput = () => {
-  isOpen.value = true;
-  highlightedIndex.value = -1;
+  // Принудительно обновляем список на следующем тике
+  nextTick(() => {
+    isOpen.value = true;
+    highlightedIndex.value = -1;
 
-  if (!searchQuery.value.trim()) {
-    emit("update:modelValue", null);
-  }
+    if (!searchQuery.value.trim()) {
+      emit("update:modelValue", null);
+    }
+  });
 };
 
-// Обработка потери фокуса
-const handleBlur = () => {
-  if (isSelecting.value) {
+// следим за изменением searchQuery для принудительного обновления списка
+watch(searchQuery, (newValue, oldValue) => {
+  // Пропускаем если это инициализация или если флаг активен
+  if (skipNextWatch.value) {
+    skipNextWatch.value = false;
     return;
   }
 
-  if (searchQuery.value.trim()) {
-    emit("update:modelValue", searchQuery.value.trim());
-  } else {
-    emit("update:modelValue", null);
+  // Пропускаем если это начальное заполнение из props (oldValue === undefined)
+  if (oldValue === undefined) {
+    return;
   }
+
+  if (!isSelecting.value && newValue !== oldValue) {
+    nextTick(() => {
+      if (searchQuery.value.trim()) {
+        isOpen.value = true;
+      }
+    });
+  }
+});
+
+const closeDropdown = () => {
   isOpen.value = false;
+};
+
+const handleFocus = () => {
+  isOpen.value = true;
+};
+
+const handleBlur = () => {
+  // Увеличен таймаут для мобильных устройств
+  setTimeout(() => {
+    if (isSelecting.value) {
+      return;
+    }
+
+    if (searchQuery.value.trim()) {
+      emit("update:modelValue", searchQuery.value.trim());
+    } else {
+      emit("update:modelValue", null);
+    }
+    isOpen.value = false;
+  }, 200);
 };
 
 // Навигация с клавиатуры
@@ -331,14 +352,6 @@ const selectCurrent = () => {
   }
 };
 
-// Переключение дропдауна
-const toggleDropdown = () => {
-  isOpen.value = !isOpen.value;
-  if (isOpen.value) {
-    highlightedIndex.value = -1;
-  }
-};
-
 // Скролл к выделенному элементу
 const scrollToHighlighted = () => {
   nextTick(() => {
@@ -363,6 +376,7 @@ const handleClickOutside = (event) => {
 watch(
   () => props.modelValue,
   (newValue) => {
+    skipNextWatch.value = true;
     searchQuery.value = newValue || "";
   },
   { immediate: true },
@@ -375,15 +389,16 @@ watch([startsWithResults, containsResults], () => {
 
 onMounted(() => {
   document.addEventListener("mousedown", handleClickOutside);
+  document.addEventListener("touchstart", handleClickOutside);
 });
 
 onUnmounted(() => {
   document.removeEventListener("mousedown", handleClickOutside);
+  document.removeEventListener("touchstart", handleClickOutside);
 });
 </script>
 
 <style scoped>
-/* Улучшение производительности на мобильных */
 @media (max-width: 768px) {
   .absolute {
     -webkit-overflow-scrolling: touch;

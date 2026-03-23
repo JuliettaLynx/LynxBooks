@@ -31,10 +31,10 @@
       <label class="flex items-center">
         <input
           type="radio"
-          :checked="modelValue === 'аудиокнига'"
-          value="аудиокнига"
+          :checked="modelValue === 'аудио'"
+          value="аудио"
           class="mr-2"
-          @change="$emit('update:modelValue', 'аудиокнига')"
+          @change="$emit('update:modelValue', 'аудио')"
         />
         <span class="text-sm dark:text-gray-300">Аудио</span>
       </label>

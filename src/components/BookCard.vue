@@ -17,17 +17,26 @@
     <!-- Обложка -->
     <div
       class="bg-gray-100 dark:bg-gray-700 flex-shrink-0 relative"
-      :class="isGrid ? 'w-24' : 'h-64'"
+      :class="isGrid ? 'w-24' : 'h-60'"
     >
+      <!-- Размытый фон (только если есть обложка) -->
+      <div
+        v-if="book.cover"
+        class="absolute z-0 inset-0 bg-cover bg-center"
+        :style="{ backgroundImage: `url(${book.cover})` }"
+      >
+        <div class="absolute inset-0 backdrop-blur-md"></div>
+      </div>
+
       <!-- Формат и статус (только для плиточного расположения, поверх обложки, слева снизу) -->
       <div
         v-if="!isGrid"
-        class="absolute bottom-2 left-2 z-10 flex items-center gap-2 flex-wrap"
+        class="absolute z-50 bottom-2 left-2 flex gap-2 flex-col"
       >
         <span
-          class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full dark:text-gray-300 shadow-sm"
+          class="text-xs px-2 py-1 w-8 bg-gray-100 dark:bg-gray-800 rounded-full dark:text-gray-300 shadow-sm"
         >
-          {{ book.format }}
+          <span>{{ getFormatEmoji(book.format) }}</span>
         </span>
         <span
           class="text-xs px-2 py-1 rounded-full shadow-sm"
@@ -45,14 +54,9 @@
       </div>
 
       <div
-        class="w-full h-full flex items-center justify-center text-4xl text-gray-400 dark:text-gray-500"
+        class="h-full relative z-10 flex items-center justify-center text-4xl text-gray-400 dark:text-gray-500"
       >
-        <img
-          v-if="book.cover"
-          :src="book.cover"
-          class="w-full h-full object-contain"
-          alt="Обложка"
-        />
+        <img v-if="book.cover" :src="book.cover" class="h-full" alt="Обложка" />
         <span v-else>📷</span>
       </div>
     </div>
@@ -61,28 +65,26 @@
     <div class="p-3 flex-1 relative">
       <div class="flex justify-between">
         <div class="flex-1 pr-2 inline-block">
-          <p class="text-sm leading-4 text-gray-500 dark:text-gray-400">
+          <p class="text-xs leading-3 text-gray-500 dark:text-gray-400">
             {{ book.author }}
           </p>
           <p
-            class="text-base leading-6 font-medium text-gray-800 dark:text-gray-200 line-clamp-2"
+            class="text-sm leading-5 font-medium text-gray-800 dark:text-gray-200 line-clamp-2"
           >
             {{ book.title }}
           </p>
           <!-- Издательство (всегда строка) -->
           <p
             v-if="book.publisher"
-            class="text-sm text-gray-500 dark:text-gray-400"
+            class="text-xs text-gray-500 dark:text-gray-400"
           >
             {{ book.publisher }}
           </p>
 
           <!-- Формат и статус (только для списка) -->
-          <div v-if="isGrid" class="flex items-center gap-2 mt-2 flex-wrap">
-            <span
-              class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full dark:text-gray-300"
-            >
-              {{ book.format }}
+          <div v-if="isGrid" class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm">
+              <span>{{ getFormatEmoji(book.format) }}</span>
             </span>
             <span
               class="text-xs px-2 py-1 rounded-full"
@@ -102,7 +104,7 @@
           <!-- Рейтинг (только для прочитанных) -->
           <div
             v-if="book.status === 'прочитано'"
-            class="mt-2 text-yellow-400 dark:text-yellow-500"
+            class="text-yellow-400 dark:text-yellow-500"
           >
             <span v-for="n in 5" :key="n" class="text-lg">
               {{ n <= (book.rating || 0) ? "★" : "☆" }}
@@ -140,4 +142,15 @@ const props = defineProps({
 });
 
 defineEmits(["edit", "favorite", "delete"]);
+
+// Функция для получения эмодзи в зависимости от формата
+const getFormatEmoji = (format) => {
+  const formatMap = {
+    бумажная: "📖",
+    электронная: "📱",
+    аудио: "🎧",
+  };
+
+  return formatMap[format] || "📚";
+};
 </script>
