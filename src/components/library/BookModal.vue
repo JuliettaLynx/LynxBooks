@@ -52,16 +52,16 @@
 
 <script setup>
 import { ref, reactive, watch, onUnmounted } from "vue";
-import ModalHeader from "./modal/ModalHeader.vue";
-import ModalActions from "./modal/ModalActions.vue";
-import CoverUploader from "./modal/CoverUploader.vue";
-import BookFormFields from "./modal/BookForm.vue";
-import BookFormat from "./modal/BookFormat.vue";
-import BookStatus from "./modal/BookStatus.vue";
-import BookRating from "./modal/BookRating.vue";
-import BookDescription from "./modal/BookDescription.vue";
-import PublisherSelect from "./modal/PublisherSelect.vue";
-import AuthorSelect from "./modal/AuthorSelect.vue";
+import ModalHeader from "../modal/ModalHeader.vue";
+import ModalActions from "../modal/ModalActions.vue";
+import CoverUploader from "../modal/CoverUploader.vue";
+import BookFormFields from "../modal/BookForm.vue";
+import BookFormat from "../modal/BookFormat.vue";
+import BookStatus from "../modal/BookStatus.vue";
+import BookRating from "../modal/BookRating.vue";
+import BookDescription from "../modal/BookDescription.vue";
+import PublisherSelect from "../modal/PublisherSelect.vue";
+import AuthorSelect from "../modal/AuthorSelect.vue";
 
 const props = defineProps({
   isOpen: Boolean,

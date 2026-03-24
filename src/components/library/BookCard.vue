@@ -31,7 +31,7 @@
       <!-- Формат и статус (только для плиточного расположения, поверх обложки, слева снизу) -->
       <div
         v-if="!isGrid"
-        class="absolute z-50 bottom-2 left-2 flex gap-2 flex-col"
+        class="absolute z-20 bottom-2 left-2 flex gap-2 flex-col"
       >
         <span
           class="text-xs px-2 py-1 w-8 bg-gray-100 dark:bg-gray-800 rounded-full dark:text-gray-300 shadow-sm"
@@ -128,7 +128,7 @@
 </template>
 
 <script setup>
-import BookActions from "./BookActions.vue";
+import BookActions from "./library/BookActions.vue";
 
 const props = defineProps({
   book: {

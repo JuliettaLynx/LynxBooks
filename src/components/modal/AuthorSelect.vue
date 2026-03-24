@@ -14,7 +14,7 @@
         @keydown.esc="closeDropdown"
         @blur="handleBlur"
         :placeholder="placeholder"
-        class="w-full text-sm mt-1.5 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-600 bg-white dark:bg-gray-700 dark:text-white"
+        class="w-full mt-1.5 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-600 bg-white dark:bg-gray-700 dark:text-white"
       />
     </div>
 
@@ -37,6 +37,7 @@
           v-for="(author, index) in startsWithResults"
           :key="author.id"
           @mousedown.prevent="selectAuthor(author.originalName)"
+          @touchstart.prevent="selectAuthor(author.originalName)"
           @mouseenter="highlightedIndex = getAbsoluteIndex(index, 'starts')"
           :class="[
             'px-4 py-2 cursor-pointer text-sm transition-colors',
@@ -65,6 +66,7 @@
           v-for="(author, index) in containsResults"
           :key="`contains-${author.id}`"
           @mousedown.prevent="selectAuthor(author.originalName)"
+          @touchstart.prevent="selectAuthor(author.originalName)"
           @mouseenter="highlightedIndex = getAbsoluteIndex(index, 'contains')"
           :class="[
             'px-4 py-2 text-sm cursor-pointer transition-colors',
@@ -119,6 +121,7 @@ const isOpen = ref(false);
 const highlightedIndex = ref(-1);
 const isSelecting = ref(false);
 const skipNextWatch = ref(false);
+const inputRef = ref(null);
 
 // Функция для генерации вариантов имени
 const generateNameVariants = (fullName) => {
@@ -245,6 +248,11 @@ const selectAuthor = (authorName) => {
   isOpen.value = false;
   emit("update:modelValue", authorName);
 
+  // Скрываем клавиатуру на мобильных устройствах
+  if (inputRef.value && inputRef.value.blur) {
+    inputRef.value.blur();
+  }
+
   setTimeout(() => {
     isSelecting.value = false;
   }, 100);
@@ -252,10 +260,16 @@ const selectAuthor = (authorName) => {
 
 // Обработка ввода
 const handleInput = () => {
-  // Принудительно обновляем список на следующем тике
+  // Принудительно открываем список на следующем тике
   nextTick(() => {
-    isOpen.value = true;
-    highlightedIndex.value = -1;
+    if (searchQuery.value !== undefined) {
+      isOpen.value = true;
+      highlightedIndex.value = -1;
+
+      // Принудительно обновляем список через пересчет computed свойств
+      const _ = startsWithResults.value;
+      const __ = containsResults.value;
+    }
 
     if (!searchQuery.value.trim()) {
       emit("update:modelValue", null);
@@ -278,8 +292,15 @@ watch(searchQuery, (newValue, oldValue) => {
 
   if (!isSelecting.value && newValue !== oldValue) {
     nextTick(() => {
-      if (searchQuery.value.trim()) {
+      // Принудительно открываем список, даже если текст изменился
+      if (searchQuery.value !== undefined) {
         isOpen.value = true;
+        highlightedIndex.value = -1;
+
+        // Триггерим обновление списка
+        const _ = startsWithResults.value;
+        const __ = containsResults.value;
+        console.log("Принудительное обновление списка");
       }
     });
   }
@@ -290,11 +311,19 @@ const closeDropdown = () => {
 };
 
 const handleFocus = () => {
-  isOpen.value = true;
+  // На мобильных устройствах открываем список с небольшой задержкой
+  setTimeout(() => {
+    if (!isSelecting.value) {
+      isOpen.value = true;
+      // Принудительно обновляем список при фокусе
+      const _ = startsWithResults.value;
+      const __ = containsResults.value;
+      console.log("Принудительное обновление списка при фокусе");
+    }
+  }, 50);
 };
 
 const handleBlur = () => {
-  // Увеличен таймаут для мобильных устройств
   setTimeout(() => {
     if (isSelecting.value) {
       return;
@@ -390,11 +419,24 @@ watch([startsWithResults, containsResults], () => {
 onMounted(() => {
   document.addEventListener("mousedown", handleClickOutside);
   document.addEventListener("touchstart", handleClickOutside);
+
+  // Для мобильных устройств - принудительное обновление при изменении значения
+  if (inputRef.value) {
+    inputRef.value.addEventListener("input", () => {
+      nextTick(() => {
+        isOpen.value = true;
+      });
+    });
+  }
 });
 
 onUnmounted(() => {
   document.removeEventListener("mousedown", handleClickOutside);
   document.removeEventListener("touchstart", handleClickOutside);
+
+  if (inputRef.value) {
+    inputRef.value.removeEventListener("input", () => {});
+  }
 });
 </script>
 

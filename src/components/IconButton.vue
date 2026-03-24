@@ -1,6 +1,6 @@
 <template>
   <button
-    class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none"
+    class="p-1 rounded-lg transition-colors duration-200 focus:outline-none"
     :class="[variant === 'primary' ? 'text-blue-600' : 'text-gray-600']"
     @click="$emit('click')"
   >
