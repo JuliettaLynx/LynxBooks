@@ -1,6 +1,5 @@
-// stores/library.js
 import { defineStore } from "pinia";
-import { ref, computed, watch } from "vue";
+import { ref } from "vue";
 import {
   collection,
   query,
@@ -17,15 +16,45 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db, auth } from "../firebase/config";
+import { booksDB } from "../db/index";
 
 export const useLibraryStore = defineStore("library", () => {
   const books = ref([]);
   const loading = ref(false);
   const error = ref(null);
-  const syncStatus = ref("synced"); // 'synced' | 'pending' | 'offline' | 'error'
+  const syncStatus = ref("synced");
   const lastSyncTime = ref(null);
 
   let unsubscribeBooks = null;
+
+  // Сохранение книги в IndexedDB
+  const saveBookToIndexedDB = async (bookData) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      await booksDB.put({
+        // Индексируемые поля
+        id: bookData.id,
+        title: bookData.title,
+        author: bookData.author,
+        status: bookData.status || "не прочитано",
+        format: bookData.format || "paper",
+        isFavorite: bookData.isFavorite || false,
+        rating: bookData.rating || 0,
+        createdAt: bookData.createdAt,
+
+        // Неиндексируемые поля
+        userId: user.uid,
+        description: bookData.description || "",
+        cover: bookData.cover || null,
+        originalCover: bookData.originalCover || null,
+        updatedAt: new Date(),
+      });
+    } catch (err) {
+      console.error("Ошибка сохранения книги в IndexedDB:", err);
+    }
+  };
 
   // Очистка при логауте
   const cleanup = () => {
@@ -68,7 +97,7 @@ export const useLibraryStore = defineStore("library", () => {
       // Реальное время через onSnapshot
       unsubscribeBooks = onSnapshot(
         q,
-        (snapshot) => {
+        async (snapshot) => {
           const newBooks = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
@@ -78,6 +107,12 @@ export const useLibraryStore = defineStore("library", () => {
           }));
 
           books.value = newBooks;
+
+          // Сохраняем в IndexedDB
+          for (const book of newBooks) {
+            await saveBookToIndexedDB(book);
+          }
+
           loading.value = false;
           lastSyncTime.value = new Date();
           error.value = null;
@@ -135,7 +170,8 @@ export const useLibraryStore = defineStore("library", () => {
         updatedAt: serverTimestamp(),
         isFavorite: bookData.isFavorite || false,
         rating: bookData.rating || 0,
-        userId: userId, // для безопасности правил
+        format: bookData.format || "paper",
+        userId: userId,
       });
 
       // Удаляем временную книгу (onSnapshot добавит реальную)
@@ -247,7 +283,7 @@ export const useLibraryStore = defineStore("library", () => {
     }
   };
 
-  // Поиск непрочитанных книг (для модалки сессии)
+  // Поиск непрочитанных книг
   const getUnreadBooks = async (searchQuery = "") => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -266,7 +302,7 @@ export const useLibraryStore = defineStore("library", () => {
         ...doc.data(),
       }));
 
-      // Фильтруем по поиску (Firestore не умеет в текстовый поиск)
+      // Фильтруем по поиску
       if (searchQuery) {
         const queryLower = searchQuery.toLowerCase();
         books = books.filter(
@@ -283,7 +319,17 @@ export const useLibraryStore = defineStore("library", () => {
     }
   };
 
-  // Пакетное добавление (для импорта)
+  // Получение книг по статусу
+  const getBooksByStatus = (status) => {
+    return books.value.filter((book) => book.status === status);
+  };
+
+  // Получение избранных книг
+  const getFavoriteBooks = () => {
+    return books.value.filter((book) => book.isFavorite);
+  };
+
+  // Пакетное добавление
   const batchAddBooks = async (booksArray) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -326,6 +372,8 @@ export const useLibraryStore = defineStore("library", () => {
     toggleFavorite,
     getBook,
     getUnreadBooks,
+    getBooksByStatus,
+    getFavoriteBooks,
     batchAddBooks,
   };
 });

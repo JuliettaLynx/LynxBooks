@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import {
   doc,
   onSnapshot,
@@ -20,7 +20,7 @@ export const useUserStore = defineStore("user", () => {
 
   let unsubscribeUser = null;
 
-  // Сохранение данных пользователя в IndexedDB
+  // Сохранение пользователя в IndexedDB
   const saveUserToIndexedDB = async (userId, data) => {
     if (!userId) return;
 
@@ -28,17 +28,26 @@ export const useUserStore = defineStore("user", () => {
       const existing = await usersDB.get(userId);
       const now = new Date().toISOString();
 
+      const userToSave = {
+        // Индексируемые поля
+        userId: userId,
+        email: data.email,
+        dailyGoal: data.dailyGoal,
+        createdAt: data.createdAt,
+        updatedAt: now,
+
+        // Неиндексируемые поля
+        avatar: data.avatar,
+        originalAvatar: data.originalAvatar,
+        displayName: data.displayName,
+      };
+
       if (existing) {
-        await usersDB.update(userId, {
-          ...data,
-          updatedAt: now,
-        });
+        await usersDB.update(userId, userToSave);
       } else {
         await usersDB.add({
-          userId: userId,
-          ...data,
+          ...userToSave,
           createdAt: now,
-          updatedAt: now,
         });
       }
       console.log("Пользователь сохранен в IndexedDB");
@@ -126,7 +135,7 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
-  // Сохранение данных пользователя в Firestore (с проверкой существования)
+  // Сохранение данных пользователя в Firestore
   const saveUserToFirestore = async (updates) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -260,7 +269,7 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
-  // Загрузка пользователя из IndexedDB (для быстрого старта)
+  // Загрузка пользователя из IndexedDB
   const loadUserFromIndexedDB = async (userId) => {
     if (!userId) return null;
 
