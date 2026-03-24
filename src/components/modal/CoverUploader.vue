@@ -108,7 +108,7 @@
 import { ref, watch, onMounted } from "vue";
 import { Cropper } from "vue-advanced-cropper";
 import "vue-advanced-cropper/dist/style.css";
-import { db } from "../../db/index.js";
+import { booksDB } from "../../db/index.js";
 
 // Пропсы и эмиты
 const props = defineProps({
@@ -152,7 +152,7 @@ const resizeImageConfig = {
 };
 
 // Константы
-const MAX_SIZE = 5 * 1024 * 1024; // 5 МБ
+const MAX_SIZE = 2 * 1024 * 1024; // 2 МБ
 const TARGET_SIZE = { width: 400, height: 600 };
 
 // Загрузка оригинала из IndexedDB
@@ -161,7 +161,7 @@ const loadOriginalFromDB = async () => {
 
   isLoading.value = true;
   try {
-    const book = await db.books.get(props.bookId);
+    const book = await booksDB.get(props.bookId);
     if (book?.originalCover) {
       originalImageSrc.value = book.originalCover;
       emit("update:originalImage", book.originalCover);
@@ -179,7 +179,7 @@ const saveOriginalToDB = async (imageData) => {
   if (!props.bookId) return;
 
   try {
-    await db.books.update(props.bookId, {
+    await booksDB.update(props.bookId, {
       originalCover: imageData,
     });
     console.log("Оригинал сохранен в IndexedDB");
@@ -193,7 +193,7 @@ const removeOriginalFromDB = async () => {
   if (!props.bookId) return;
 
   try {
-    await db.books.update(props.bookId, {
+    await booksDB.update(props.bookId, {
       originalCover: null,
     });
     console.log("Оригинал удален из IndexedDB");

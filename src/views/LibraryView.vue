@@ -6,7 +6,7 @@
     <div
       class="sticky top-0 bg-gray-100 dark:bg-gray-800 z-20 border-b dark:border-gray-700 transition-colors duration-200"
     >
-      <div class="p-4">
+      <div class="p-3">
         <div class="flex justify-between items-center">
           <h1 class="text-2xl font-bold dark:text-white">Библиотека</h1>
           <div class="flex gap-1">
@@ -123,9 +123,9 @@ import { auth } from "../firebase/config";
 import { useDebounceFn } from "@vueuse/core";
 import { useLibraryStore } from "../stores/library";
 import IconButton from "../components/IconButton.vue";
-import SearchInput from "../components/SearchInput.vue";
-import BookCard from "../components/BookCard.vue";
-import BookModal from "../components/BookModal.vue";
+import SearchInput from "../components/library/SearchInput.vue";
+import BookCard from "../components/library/BookCard.vue";
+import BookModal from "../components/library/BookModal.vue";
 import UserProfile from "../components/UserProfile.vue";
 
 const libraryStore = useLibraryStore();

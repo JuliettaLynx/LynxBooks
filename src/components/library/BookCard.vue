@@ -128,7 +128,7 @@
 </template>
 
 <script setup>
-import BookActions from "./library/BookActions.vue";
+import BookActions from "./BookActions.vue";
 
 const props = defineProps({
   book: {
