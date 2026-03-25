@@ -1,0 +1,544 @@
+<template>
+  <Teleport to="body">
+    <div
+      v-if="isOpen"
+      class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4"
+      @click.self="handleClose"
+    >
+      <div
+        ref="modalRef"
+        class="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl max-h-[90vh] flex flex-col"
+      >
+        <ModalHeader
+          :title="
+            sessionToEdit?.id ? 'Редактировать сессию' : 'Добавить сессию'
+          "
+          @close="handleClose"
+        />
+
+        <div class="flex-1 overflow-y-auto p-4">
+          <form @submit.prevent="handleSubmit" class="space-y-4">
+            <!-- Выбор книги (только для добавления) -->
+            <div
+              v-if="!sessionToEdit?.id"
+              class="relative"
+              ref="dropdownContainerRef"
+            >
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Книга *
+              </label>
+
+              <!-- Кастомный селект -->
+              <div class="relative">
+                <button
+                  type="button"
+                  @click="toggleDropdown"
+                  class="w-full px-3 py-2 text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex justify-between items-center"
+                >
+                  <span
+                    :class="
+                      form.bookId
+                        ? 'text-gray-900 dark:text-white'
+                        : 'text-gray-500 dark:text-gray-400'
+                    "
+                  >
+                    {{ selectedBookTitle || "Выберите книгу" }}
+                  </span>
+                  <svg
+                    class="w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform duration-200"
+                    :class="{ 'rotate-180': isDropdownOpen }"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                <!-- Выпадающий список -->
+                <div
+                  v-if="isDropdownOpen"
+                  class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                >
+                  <div
+                    v-for="book in unreadBooks"
+                    :key="book.id"
+                    @click="selectBook(book)"
+                    class="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0"
+                    :class="{
+                      'bg-blue-50 dark:bg-blue-900/20': form.bookId === book.id,
+                    }"
+                  >
+                    <div class="font-medium text-gray-900 dark:text-white">
+                      {{ book.title }}
+                    </div>
+                    <div
+                      class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"
+                    >
+                      {{ book.author || "Автор не указан" }}
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="unreadBooks.length === 0"
+                    class="px-3 py-4 text-center text-gray-500 dark:text-gray-400"
+                  >
+                    Нет непрочитанных книг
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Отображение книги при редактировании -->
+            <div v-else>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Книга
+              </label>
+              <div
+                class="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white"
+              >
+                {{ sessionToEdit.bookTitle }}
+              </div>
+            </div>
+
+            <!-- Цвет сессии -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Цвет сессии
+              </label>
+              <div class="grid grid-cols-8 gap-2">
+                <button
+                  v-for="color in colorOptions"
+                  :key="color"
+                  type="button"
+                  class="w-8 h-8 rounded-full border-2 transition-all hover:scale-110"
+                  :class="[
+                    form.color === color
+                      ? 'border-gray-900 dark:border-white scale-110 shadow-md'
+                      : 'border-transparent',
+                  ]"
+                  :style="{ backgroundColor: color }"
+                  @click="form.color = color"
+                ></button>
+              </div>
+            </div>
+
+            <!-- Дата и время -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Дата и время окончания *
+              </label>
+              <input
+                type="datetime-local"
+                v-model="form.date"
+                required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <!-- Страницы -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Прочитанные страницы
+              </label>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <input
+                    type="number"
+                    v-model.number="form.startPage"
+                    placeholder="Начальная"
+                    min="1"
+                    @blur="validateStartPage"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="number"
+                    v-model.number="form.endPage"
+                    placeholder="Конечная"
+                    min="1"
+                    @blur="validateEndPage"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <div
+                v-if="
+                  form.startPage &&
+                  form.endPage &&
+                  form.startPage <= form.endPage
+                "
+                class="mt-1 text-xs text-gray-700 dark:text-gray-300 font-medium"
+              >
+                {{ pagesRead }} страниц
+              </div>
+              <div
+                v-if="
+                  form.startPage &&
+                  form.endPage &&
+                  form.startPage > form.endPage
+                "
+                class="mt-2 text-sm text-red-600 dark:text-red-400"
+              >
+                Начальная страница не может быть больше конечной
+              </div>
+            </div>
+
+            <!-- Чекбокс "Книга дочитана" -->
+            <div
+              class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <input
+                type="checkbox"
+                id="finishedBook"
+                v-model="form.finishedBook"
+                @change="handleFinishedBookChange"
+                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+              />
+              <label
+                for="finishedBook"
+                class="ml-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
+              >
+                Книга дочитана
+              </label>
+            </div>
+          </form>
+        </div>
+
+        <ModalActions
+          :is-edit="!!sessionToEdit?.id"
+          @reset="resetForm"
+          @submit="handleSubmit"
+        />
+      </div>
+    </div>
+  </Teleport>
+</template>
+
+<script setup>
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from "vue";
+import { useSessionStore } from "../../stores/session";
+import { useLibraryStore } from "../../stores/library";
+import ModalHeader from "../modal/ModalHeader.vue";
+import ModalActions from "../modal/ModalActions.vue";
+
+const props = defineProps({
+  isOpen: {
+    type: Boolean,
+    default: false,
+  },
+  initialDate: {
+    type: Date,
+    default: () => new Date(),
+  },
+  sessionToEdit: {
+    type: Object,
+    default: null,
+  },
+});
+
+const emit = defineEmits(["close", "saved"]);
+
+const sessionStore = useSessionStore();
+const libraryStore = useLibraryStore();
+
+const loading = ref(false);
+const unreadBooks = ref([]);
+const isDropdownOpen = ref(false);
+const dropdownContainerRef = ref(null);
+const modalRef = ref(null);
+
+const colorOptions = [
+  "#EF4444",
+  "#EF8544",
+  "#EFC144",
+  "#32D800",
+  "#00E7F4",
+  "#001CD8",
+  "#8C00D8",
+  "#353535",
+
+  "#FF8A8A",
+  "#FFB58B",
+  "#FFDA7D",
+  "#94FF74",
+  "#74F8FF",
+  "#8494FF",
+  "#DC9FFF",
+  "#9CA3AF",
+];
+
+const form = reactive({
+  bookId: "",
+  color: "#3B82F6",
+  date: "",
+  startPage: null,
+  endPage: null,
+  finishedBook: false,
+  rating: 0,
+});
+
+const selectedBookTitle = computed(() => {
+  const book = unreadBooks.value.find((b) => b.id === form.bookId);
+  return book ? book.title : "";
+});
+
+const pagesRead = computed(() => {
+  if (form.startPage && form.endPage && form.startPage <= form.endPage) {
+    return form.endPage - form.startPage + 1;
+  }
+  return 0;
+});
+
+// Форматирование даты для input
+const formatDateForInput = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+// Получение последней сессии по книге
+const getLastSessionForBook = (bookId) => {
+  const allSessions = sessionStore.sessions;
+  const bookSessions = allSessions.filter((s) => s.bookId === bookId);
+  if (bookSessions.length === 0) return null;
+
+  // Сортируем по дате и берем последнюю
+  return bookSessions.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+};
+
+// Автозаполнение начальной страницы
+const autoFillStartPage = (bookId) => {
+  const lastSession = getLastSessionForBook(bookId);
+  if (lastSession && !lastSession.finishedBook) {
+    // Если книга не дочитана, берем последнюю страницу + 1
+    const lastPage = lastSession.endPage || lastSession.pagesRead;
+    if (lastPage) {
+      form.startPage = lastPage + 1;
+    }
+  } else if (!lastSession) {
+    // Если сессий нет, начинаем с 1 страницы
+    form.startPage = 1;
+  }
+};
+
+// Валидация страниц
+const validateStartPage = () => {
+  if (form.startPage && form.endPage && form.startPage > form.endPage) {
+    form.endPage = form.startPage;
+  }
+};
+
+const validateEndPage = () => {
+  if (form.startPage && form.endPage && form.endPage < form.startPage) {
+    form.startPage = form.endPage;
+  }
+};
+
+// Обработка изменения чекбокса "Книга дочитана"
+const handleFinishedBookChange = () => {
+  if (form.finishedBook && !form.rating) {
+  }
+};
+
+// Загрузка непрочитанных книг
+const loadUnreadBooks = async () => {
+  try {
+    unreadBooks.value = await libraryStore.getUnreadBooks();
+  } catch (error) {
+    console.error("Ошибка загрузки книг:", error);
+  }
+};
+
+// Загрузка последней сессии пользователя
+const loadLastSession = () => {
+  if (props.sessionToEdit?.id) return;
+
+  const lastSession = sessionStore.loadLastSession();
+  if (lastSession && lastSession.bookId) {
+    form.bookId = lastSession.bookId;
+    form.color = lastSession.color || "#3B82F6";
+    // Автозаполняем начальную страницу
+    autoFillStartPage(form.bookId);
+  }
+};
+
+// Управление дропдауном
+const toggleDropdown = () => {
+  isDropdownOpen.value = !isDropdownOpen.value;
+};
+
+const selectBook = (book) => {
+  form.bookId = book.id;
+  isDropdownOpen.value = false;
+  // При выборе книги автозаполняем начальную страницу
+  autoFillStartPage(form.bookId);
+};
+
+// Закрытие дропдауна при клике вне
+const handleClickOutside = (event) => {
+  if (
+    dropdownContainerRef.value &&
+    !dropdownContainerRef.value.contains(event.target)
+  ) {
+    isDropdownOpen.value = false;
+  }
+};
+
+// Сброс формы
+const resetForm = () => {
+  if (props.sessionToEdit?.id) {
+    if (props.sessionToEdit) {
+      form.bookId = props.sessionToEdit.bookId;
+      form.color = props.sessionToEdit.color || "#3B82F6";
+      form.date = formatDateForInput(props.sessionToEdit.date);
+      form.startPage = props.sessionToEdit.startPage || null;
+      form.endPage = props.sessionToEdit.endPage || null;
+      form.finishedBook = props.sessionToEdit.finishedBook || false;
+      form.rating = props.sessionToEdit.rating || 0;
+    }
+  } else {
+    form.bookId = "";
+    form.color = "#3B82F6";
+    form.date = formatDateForInput(props.initialDate);
+    form.startPage = null;
+    form.endPage = null;
+    form.finishedBook = false;
+    form.rating = 0;
+  }
+};
+
+// Отправка формы
+const handleSubmit = async () => {
+  console.log(form.bookId);
+  if (form.bookId == "Выберите книгу") {
+    alert("Выберите книгу");
+    return;
+  }
+
+  if (!form.date) {
+    alert("Выберите дату и время");
+    return;
+  }
+
+  if (form.startPage && form.endPage && form.startPage > form.endPage) {
+    alert("Начальная страница не может быть больше конечной");
+    return;
+  }
+
+  if (!form.startPage || !form.endPage) {
+    alert("Укажите начальную и конечную страницы");
+    return;
+  }
+
+  loading.value = true;
+
+  try {
+    if (props.sessionToEdit?.id) {
+      // Редактирование сессии
+      await sessionStore.updateSession(props.sessionToEdit.id, {
+        color: form.color,
+        date: new Date(form.date),
+        startPage: form.startPage,
+        endPage: form.endPage,
+        pagesRead: pagesRead.value,
+        finishedBook: form.finishedBook,
+        rating: form.rating,
+      });
+    } else {
+      // Добавление сессии
+      const selectedBook = unreadBooks.value.find((b) => b.id === form.bookId);
+      if (!selectedBook) throw new Error("Книга не найдена");
+
+      await sessionStore.addSession({
+        bookId: form.bookId,
+        bookTitle: selectedBook.title,
+        color: form.color,
+        date: new Date(form.date),
+        startPage: form.startPage,
+        endPage: form.endPage,
+        pagesRead: pagesRead.value,
+        finishedBook: form.finishedBook,
+        rating: form.rating,
+      });
+    }
+
+    emit("saved");
+    handleClose();
+  } catch (error) {
+    console.error("Ошибка сохранения сессии:", error);
+    alert("Ошибка при сохранении сессии");
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleClose = () => {
+  resetForm();
+  emit("close");
+};
+
+// Следим за открытием модалки
+watch(
+  () => props.isOpen,
+  async (isOpen) => {
+    if (isOpen) {
+      if (!props.sessionToEdit?.id) {
+        await loadUnreadBooks();
+      }
+      resetForm();
+      loadLastSession();
+    } else {
+      isDropdownOpen.value = false;
+    }
+  },
+  { immediate: true },
+);
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", handleClickOutside);
+  document.body.classList.remove("modal-open");
+});
+</script>
+
+<style scoped>
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+</style>

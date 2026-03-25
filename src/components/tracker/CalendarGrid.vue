@@ -20,7 +20,7 @@
     <div
       v-for="day in daysInMonth"
       :key="day"
-      class="relative aspect-[1/2] bg-gray-100 dark:bg-gray-800 cursor-pointer rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+      class="relative aspect-[1/2] border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
       @click="$emit('day-click', new Date(year, month, day))"
     >
       <!-- Цветные секции -->
@@ -44,8 +44,7 @@
       <div class="absolute inset-0 flex flex-col items-center justify-between">
         <!-- Количество страниц - сверху -->
         <div
-          class="text-xs font-bold px-1.5 py-0.5 rounded-full"
-          :class="getPagesColor(getPagesRead(day))"
+          class="text-xs font-bold px-1.5 py-0.5 rounded-full text-gray-700 dark:text-gray-300"
         >
           {{ getPagesRead(day) }}
         </div>
@@ -56,19 +55,6 @@
         >
           {{ day }}
         </div>
-      </div>
-
-      <!-- Индикаторы цветов книг (маленькие точки внизу) -->
-      <div
-        v-if="getUniqueColors(day).length > 0"
-        class="absolute bottom-1 left-1 right-1 flex gap-0.5 justify-center"
-      >
-        <div
-          v-for="(color, idx) in getUniqueColors(day).slice(0, 4)"
-          :key="idx"
-          class="w-1.5 h-1.5 rounded-full"
-          :style="{ backgroundColor: color }"
-        ></div>
       </div>
     </div>
   </div>
@@ -126,6 +112,7 @@ const getPagesRead = (day) => {
 const getProgressSegments = (day) => {
   const sessions = getSessionsForDay(day);
   const totalPages = getPagesRead(day);
+  const dailyGoal = userStore.dailyGoal || 50;
 
   if (sessions.length === 0 || totalPages === 0) {
     return [];
@@ -133,34 +120,35 @@ const getProgressSegments = (day) => {
 
   const segments = [];
 
-  for (const session of sessions) {
-    const pagesRead = session.pagesRead || 0;
-    const percentOfTotal = (pagesRead / totalPages) * 100;
+  // Если общее количество страниц меньше или равно дневной цели
+  if (totalPages <= dailyGoal) {
+    // Каждая книга занимает процент от дневной цели
+    for (const session of sessions) {
+      const pagesRead = session.pagesRead || 0;
+      const heightPercent = (pagesRead / dailyGoal) * 100;
 
-    segments.push({
-      color: session.color || "#9CA3AF",
-      pages: pagesRead,
-      bookTitle: session.bookTitle || "Книга",
-      widthPercent: percentOfTotal,
-    });
+      segments.push({
+        color: session.color || "#9CA3AF",
+        pages: pagesRead,
+        bookTitle: session.bookTitle || "Книга",
+        heightPercent: heightPercent,
+      });
+    }
+  } else {
+    // Если страниц больше цели, считаем пропорции между книгами
+    for (const session of sessions) {
+      const pagesRead = session.pagesRead || 0;
+      const heightPercent = (pagesRead / totalPages) * 100;
+
+      segments.push({
+        color: session.color || "#9CA3AF",
+        pages: pagesRead,
+        bookTitle: session.bookTitle || "Книга",
+        heightPercent: heightPercent,
+      });
+    }
   }
 
   return segments;
-};
-
-const getPagesColor = (pages) => {
-  const goal = userStore.dailyGoal || 50;
-  if (pages === 0) return "text-gray-500 dark:text-gray-400";
-  if (pages >= goal) return "text-green-600 dark:text-green-400";
-  if (pages >= goal * 0.75) return "text-emerald-600 dark:text-emerald-400";
-  if (pages >= goal * 0.5) return "text-yellow-600 dark:text-yellow-400";
-  if (pages >= goal * 0.25) return "text-orange-600 dark:text-orange-400";
-  return "text-red-600 dark:text-red-400";
-};
-
-const getUniqueColors = (day) => {
-  const sessions = getSessionsForDay(day);
-  const colors = sessions.map((s) => s.color).filter((c) => c);
-  return [...new Set(colors)];
 };
 </script>
