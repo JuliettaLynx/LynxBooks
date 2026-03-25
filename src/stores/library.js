@@ -27,7 +27,7 @@ export const useLibraryStore = defineStore("library", () => {
 
   let unsubscribeBooks = null;
 
-  // Сохранение книги в IndexedDB
+  // ========== Работа с IndexedDB ==========
   const saveBookToIndexedDB = async (bookData) => {
     try {
       const user = auth.currentUser;
@@ -56,31 +56,10 @@ export const useLibraryStore = defineStore("library", () => {
     }
   };
 
-  // Очистка при логауте
-  const cleanup = () => {
-    if (unsubscribeBooks) {
-      unsubscribeBooks();
-      unsubscribeBooks = null;
-    }
-    books.value = [];
-    error.value = null;
-  };
-
-  // Следим за сетью
-  const initNetworkListener = () => {
-    window.addEventListener("online", () => {
-      syncStatus.value = "synced";
-    });
-    window.addEventListener("offline", () => {
-      syncStatus.value = "offline";
-    });
-  };
-
-  // Инициализация синхронизации
+  // ========== Синхронизация ==========
   const initSync = (userId) => {
     if (!userId) return;
 
-    // Очищаем предыдущую подписку
     if (unsubscribeBooks) {
       unsubscribeBooks();
     }
@@ -91,24 +70,20 @@ export const useLibraryStore = defineStore("library", () => {
     try {
       const booksRef = collection(db, `users/${userId}/books`);
 
-      // Сортируем по дате создания (новые сверху)
       const q = query(booksRef, orderBy("createdAt", "desc"));
 
-      // Реальное время через onSnapshot
       unsubscribeBooks = onSnapshot(
         q,
         async (snapshot) => {
           const newBooks = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
-            // Преобразуем timestamp в Date для удобства
             createdAt: doc.data().createdAt?.toDate?.() || doc.data().createdAt,
             updatedAt: doc.data().updatedAt?.toDate?.() || doc.data().updatedAt,
           }));
 
           books.value = newBooks;
 
-          // Сохраняем в IndexedDB
           for (const book of newBooks) {
             await saveBookToIndexedDB(book);
           }
@@ -141,7 +116,26 @@ export const useLibraryStore = defineStore("library", () => {
     }
   };
 
-  // Добавление книги
+  const cleanup = () => {
+    if (unsubscribeBooks) {
+      unsubscribeBooks();
+      unsubscribeBooks = null;
+    }
+    books.value = [];
+    error.value = null;
+  };
+
+  // Следим за сетью
+  const initNetworkListener = () => {
+    window.addEventListener("online", () => {
+      syncStatus.value = "synced";
+    });
+    window.addEventListener("offline", () => {
+      syncStatus.value = "offline";
+    });
+  };
+
+  // ========== CRUD операции ==========
   const addBook = async (bookData) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -174,14 +168,12 @@ export const useLibraryStore = defineStore("library", () => {
         userId: userId,
       });
 
-      // Удаляем временную книгу (onSnapshot добавит реальную)
       books.value = books.value.filter((b) => b.id !== tempId);
 
       return docRef.id;
     } catch (err) {
       console.error("Add book error:", err);
 
-      // Помечаем как ошибку
       books.value = books.value.map((b) =>
         b.id === tempId ? { ...b, _syncStatus: "error" } : b,
       );
@@ -191,7 +183,6 @@ export const useLibraryStore = defineStore("library", () => {
     }
   };
 
-  // Обновление книги
   const updateBook = async (id, bookData) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -220,14 +211,12 @@ export const useLibraryStore = defineStore("library", () => {
       });
     } catch (err) {
       console.error("Update error:", err);
-      // Возвращаем оригинал
       books.value[index] = originalBook;
       error.value = err.message;
       throw err;
     }
   };
 
-  // Удаление книги
   const deleteBook = async (id) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -244,7 +233,6 @@ export const useLibraryStore = defineStore("library", () => {
       await deleteDoc(bookRef);
     } catch (err) {
       console.error("Delete error:", err);
-      // Возвращаем книгу
       if (deletedBook) {
         books.value = [deletedBook, ...books.value];
       }
@@ -253,14 +241,14 @@ export const useLibraryStore = defineStore("library", () => {
     }
   };
 
-  // Переключение избранного
+  // ========== Действия с книгами ==========
   const toggleFavorite = async (book) => {
     await updateBook(book.id, {
       isFavorite: !book.isFavorite,
     });
   };
 
-  // Получение одной книги
+  // ========== Получение данных ==========
   const getBook = async (id) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -283,7 +271,6 @@ export const useLibraryStore = defineStore("library", () => {
     }
   };
 
-  // Поиск непрочитанных книг
   const getUnreadBooks = async (searchQuery = "") => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -302,7 +289,6 @@ export const useLibraryStore = defineStore("library", () => {
         ...doc.data(),
       }));
 
-      // Фильтруем по поиску
       if (searchQuery) {
         const queryLower = searchQuery.toLowerCase();
         books = books.filter(
@@ -319,17 +305,15 @@ export const useLibraryStore = defineStore("library", () => {
     }
   };
 
-  // Получение книг по статусу
   const getBooksByStatus = (status) => {
     return books.value.filter((book) => book.status === status);
   };
 
-  // Получение избранных книг
   const getFavoriteBooks = () => {
     return books.value.filter((book) => book.isFavorite);
   };
 
-  // Пакетное добавление
+  // ========== Пакетные операции ==========
   const batchAddBooks = async (booksArray) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -351,7 +335,7 @@ export const useLibraryStore = defineStore("library", () => {
     await batch.commit();
   };
 
-  // Инициализация
+  // ========== Инициализация ==========
   const init = () => {
     console.log("Library store initialized");
     initNetworkListener();

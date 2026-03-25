@@ -1,4 +1,3 @@
-// stores/session.js
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import {
@@ -25,13 +24,12 @@ export const useSessionStore = defineStore("session", () => {
 
   let unsubscribeSessions = null;
 
-  // Сохранение сессии в IndexedDB (оптимизированное)
+  // ========== Работа с IndexedDB ==========
   const saveSessionToIndexedDB = async (sessionData) => {
     try {
       const user = auth.currentUser;
       if (!user) return;
 
-      // Вычисляем pagesRead если его нет
       const pagesRead =
         sessionData.pagesRead ||
         (sessionData.endPage && sessionData.startPage
@@ -51,6 +49,7 @@ export const useSessionStore = defineStore("session", () => {
         // Неиндексируемые поля
         userId: user.uid,
         bookTitle: sessionData.bookTitle || "",
+        startDate: sessionData.startDate || null,
         startPage: sessionData.startPage || null,
         endPage: sessionData.endPage || null,
         rating: sessionData.rating || 0,
@@ -61,7 +60,7 @@ export const useSessionStore = defineStore("session", () => {
     }
   };
 
-  // Загрузка последней сессии из localStorage
+  // ========== Работа с localStorage ==========
   const loadLastSession = () => {
     const saved = localStorage.getItem("lastSession");
     if (saved) {
@@ -74,7 +73,6 @@ export const useSessionStore = defineStore("session", () => {
     return lastSession.value;
   };
 
-  // Сохранение последней сессии
   const saveLastSession = (session) => {
     if (session && session.bookId) {
       lastSession.value = {
@@ -86,7 +84,7 @@ export const useSessionStore = defineStore("session", () => {
     }
   };
 
-  // Инициализация синхронизации
+  // ========== Синхронизация ==========
   const initSync = (userId) => {
     if (!userId) return;
 
@@ -107,6 +105,7 @@ export const useSessionStore = defineStore("session", () => {
           const newSessions = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
+            startDate: doc.data().startDate?.toDate?.() || doc.data().startDate,
             date: doc.data().date?.toDate?.() || doc.data().date,
             createdAt: doc.data().createdAt?.toDate?.() || doc.data().createdAt,
             updatedAt: doc.data().updatedAt?.toDate?.() || doc.data().updatedAt,
@@ -134,7 +133,15 @@ export const useSessionStore = defineStore("session", () => {
     }
   };
 
-  // Получение сессий за конкретный день (оптимизированное)
+  const cleanup = () => {
+    if (unsubscribeSessions) {
+      unsubscribeSessions();
+      unsubscribeSessions = null;
+    }
+    sessions.value = [];
+  };
+
+  // ========== Получение данных ==========
   const getSessionsByDate = (date) => {
     const targetDate = new Date(date);
     targetDate.setHours(0, 0, 0, 0);
@@ -149,7 +156,6 @@ export const useSessionStore = defineStore("session", () => {
     });
   };
 
-  // Получение суммы страниц за день
   const getPagesReadByDate = (date) => {
     const daySessions = getSessionsByDate(date);
     return daySessions.reduce(
@@ -158,12 +164,10 @@ export const useSessionStore = defineStore("session", () => {
     );
   };
 
-  // Получение сессий по книге
   const getSessionsByBook = (bookId) => {
     return sessions.value.filter((session) => session.bookId === bookId);
   };
 
-  // Получение общей статистики по книге
   const getBookStats = (bookId) => {
     const bookSessions = getSessionsByBook(bookId);
     const totalPagesRead = bookSessions.reduce(
@@ -183,14 +187,13 @@ export const useSessionStore = defineStore("session", () => {
     };
   };
 
-  // Добавление сессии
+  // ========== CRUD операции ==========
   const addSession = async (sessionData) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
 
     const libraryStore = useLibraryStore();
 
-    // Вычисляем pagesRead
     const pagesRead =
       sessionData.pagesRead ||
       (sessionData.endPage && sessionData.startPage
@@ -221,7 +224,6 @@ export const useSessionStore = defineStore("session", () => {
         userId: user.uid,
       });
 
-      // Сохраняем как последнюю сессию
       saveLastSession({
         bookId: sessionData.bookId,
         bookTitle: sessionData.bookTitle,
@@ -247,7 +249,6 @@ export const useSessionStore = defineStore("session", () => {
     }
   };
 
-  // Обновление сессии
   const updateSession = async (id, sessionData) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -258,7 +259,6 @@ export const useSessionStore = defineStore("session", () => {
 
     const originalSession = { ...sessions.value[index] };
 
-    // Вычисляем pagesRead если изменились страницы
     const pagesRead =
       sessionData.pagesRead ||
       (sessionData.endPage && sessionData.startPage
@@ -295,7 +295,6 @@ export const useSessionStore = defineStore("session", () => {
     }
   };
 
-  // Удаление сессии
   const deleteSession = async (id) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -314,15 +313,6 @@ export const useSessionStore = defineStore("session", () => {
       error.value = err.message;
       throw err;
     }
-  };
-
-  // Очистка
-  const cleanup = () => {
-    if (unsubscribeSessions) {
-      unsubscribeSessions();
-      unsubscribeSessions = null;
-    }
-    sessions.value = [];
   };
 
   return {

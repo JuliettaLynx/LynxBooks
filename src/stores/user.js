@@ -20,7 +20,7 @@ export const useUserStore = defineStore("user", () => {
 
   let unsubscribeUser = null;
 
-  // Сохранение пользователя в IndexedDB
+  // ========== Работа с IndexedDB ==========
   const saveUserToIndexedDB = async (userId, data) => {
     if (!userId) return;
 
@@ -56,7 +56,22 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
-  // Инициализация синхронизации пользовательских данных
+  const loadUserFromIndexedDB = async (userId) => {
+    if (!userId) return null;
+
+    try {
+      const user = await usersDB.get(userId);
+      if (user) {
+        console.log("Пользователь загружен из IndexedDB");
+        return user;
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки из IndexedDB:", error);
+    }
+    return null;
+  };
+
+  // ========== Синхронизация ==========
   const initUserSync = (userId) => {
     if (!userId) return;
 
@@ -77,7 +92,6 @@ export const useUserStore = defineStore("user", () => {
           if (snapshot.exists()) {
             const data = snapshot.data();
 
-            // Преобразуем timestamp в Date
             const userDataObj = {
               userId: snapshot.id,
               ...data,
@@ -87,19 +101,16 @@ export const useUserStore = defineStore("user", () => {
 
             userData.value = userDataObj;
 
-            // Сохраняем в IndexedDB для кэширования
             await saveUserToIndexedDB(snapshot.id, {
               ...data,
               userId: snapshot.id,
             });
 
-            // Обновляем локальное хранилище
             if (data.dailyGoal) {
               dailyGoal.value = data.dailyGoal;
               localStorage.setItem("dailyGoal", data.dailyGoal);
             }
           } else {
-            // Создаем запись если её нет
             console.log("Создаем документ пользователя в Firestore");
             const newUserData = {
               email: auth.currentUser?.email || "",
@@ -113,7 +124,6 @@ export const useUserStore = defineStore("user", () => {
 
             await setDoc(userRef, newUserData);
 
-            // Сохраняем в IndexedDB сразу
             await saveUserToIndexedDB(userId, {
               ...newUserData,
               userId: userId,
@@ -135,7 +145,15 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
-  // Сохранение данных пользователя в Firestore
+  const cleanup = () => {
+    if (unsubscribeUser) {
+      unsubscribeUser();
+      unsubscribeUser = null;
+    }
+    userData.value = null;
+  };
+
+  // ========== Работа с Firestore ==========
   const saveUserToFirestore = async (updates) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -143,17 +161,14 @@ export const useUserStore = defineStore("user", () => {
     try {
       const userRef = doc(db, "users", user.uid);
 
-      // Проверяем существует ли документ
       const docSnap = await getDoc(userRef);
 
       if (docSnap.exists()) {
-        // Обновляем существующий документ
         await updateDoc(userRef, {
           ...updates,
           updatedAt: serverTimestamp(),
         });
       } else {
-        // Создаем новый документ
         await setDoc(userRef, {
           email: user.email,
           displayName: user.displayName || "",
@@ -168,7 +183,6 @@ export const useUserStore = defineStore("user", () => {
 
       console.log("Данные пользователя сохранены в Firestore");
 
-      // Обновляем локальный userData
       if (userData.value) {
         userData.value = {
           ...userData.value,
@@ -177,7 +191,6 @@ export const useUserStore = defineStore("user", () => {
         };
       }
 
-      // Сохраняем в IndexedDB
       await saveUserToIndexedDB(user.uid, {
         ...(userData.value || {}),
         ...updates,
@@ -191,7 +204,7 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
-  // Обновление аватара
+  // ========== Обновление профиля ==========
   const updateAvatar = async (avatarBase64, originalAvatarBase64 = null) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
@@ -224,18 +237,15 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
-  // Полное обновление профиля
   const updateProfile = async (updates) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Not authenticated");
 
     try {
-      // Обновляем Firebase Auth если нужно
       if (updates.displayName) {
         await firebaseUpdateProfile(user, { displayName: updates.displayName });
       }
 
-      // Сохраняем в Firestore
       await saveUserToFirestore({
         ...updates,
         updatedAt: serverTimestamp(),
@@ -257,41 +267,15 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
-  // Установка дневной цели
+  // ========== Настройки ==========
   const setDailyGoal = async (goal) => {
     dailyGoal.value = goal;
     localStorage.setItem("dailyGoal", goal);
 
-    // Синхронизируем с Firestore
     const user = auth.currentUser;
     if (user) {
       await saveUserToFirestore({ dailyGoal: goal });
     }
-  };
-
-  // Загрузка пользователя из IndexedDB
-  const loadUserFromIndexedDB = async (userId) => {
-    if (!userId) return null;
-
-    try {
-      const user = await usersDB.get(userId);
-      if (user) {
-        console.log("Пользователь загружен из IndexedDB");
-        return user;
-      }
-    } catch (error) {
-      console.error("Ошибка загрузки из IndexedDB:", error);
-    }
-    return null;
-  };
-
-  // Очистка при логауте
-  const cleanup = () => {
-    if (unsubscribeUser) {
-      unsubscribeUser();
-      unsubscribeUser = null;
-    }
-    userData.value = null;
   };
 
   return {
