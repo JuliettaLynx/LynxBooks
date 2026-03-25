@@ -27,7 +27,7 @@
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Книга *
+                Книга
               </label>
 
               <!-- Кастомный селект -->
@@ -134,70 +134,93 @@
               </div>
             </div>
 
-            <!-- Дата и время -->
+            <!-- Начало -->
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 grid-flow-row"
               >
-                Дата и время окончания *
+                Начало
               </label>
-              <input
-                type="datetime-local"
-                v-model="form.date"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
 
-            <!-- Страницы -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Прочитанные страницы
-              </label>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="col-span-2">
+                  <input
+                    type="datetime-local"
+                    v-model="form.startDate"
+                    required
+                    class="w-full h-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div class="col-span-1">
                   <input
                     type="number"
                     v-model.number="form.startPage"
-                    placeholder="Начальная"
+                    placeholder="№ стр."
                     min="1"
-                    @blur="validateStartPage"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                <div>
+              </div>
+            </div>
+
+            <!-- Конец -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 grid-flow-row"
+              >
+                Конец
+              </label>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="col-span-2">
+                  <input
+                    type="datetime-local"
+                    v-model="form.date"
+                    required
+                    class="w-full h-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div class="col-span-1">
                   <input
                     type="number"
                     v-model.number="form.endPage"
-                    placeholder="Конечная"
+                    placeholder="№ стр."
                     min="1"
-                    @blur="validateEndPage"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
-              <div
-                v-if="
-                  form.startPage &&
-                  form.endPage &&
-                  form.startPage <= form.endPage
-                "
-                class="mt-1 text-xs text-gray-700 dark:text-gray-300 font-medium"
-              >
-                {{ pagesRead }} страниц
-              </div>
-              <div
-                v-if="
-                  form.startPage &&
-                  form.endPage &&
-                  form.startPage > form.endPage
-                "
-                class="mt-2 text-sm text-red-600 dark:text-red-400"
-              >
-                Начальная страница не может быть больше конечной
-              </div>
+            </div>
+
+            <div
+              v-if="
+                form.startPage && form.endPage && form.startPage <= form.endPage
+              "
+              class="leading-3 text-xs text-gray-700 dark:text-gray-300"
+            >
+              Страниц прочитано: {{ pagesRead }}
+            </div>
+            <div
+              v-if="
+                form.startPage && form.endPage && form.startPage > form.endPage
+              "
+              class="text-sm text-red-600 dark:text-red-400"
+            >
+              Начальная страница не может быть больше конечной
+            </div>
+
+            <div
+              v-if="form.startDate && form.date && form.startDate <= form.date"
+              class="leading-3 text-xs text-gray-700 dark:text-gray-300"
+            >
+              Время сессии: {{ timeRead }}
+            </div>
+            <div
+              v-if="form.startDate && form.date && form.startDate > form.date"
+              class="text-sm text-red-600 dark:text-red-400"
+            >
+              Начальные дата/время не могут быть позже конечных
             </div>
 
             <!-- Чекбокс "Книга дочитана" -->
@@ -262,7 +285,7 @@ const loading = ref(false);
 const unreadBooks = ref([]);
 const isDropdownOpen = ref(false);
 const dropdownContainerRef = ref(null);
-const modalRef = ref(null);
+const isClosing = ref(false);
 
 const colorOptions = [
   "#EF4444",
@@ -272,7 +295,7 @@ const colorOptions = [
   "#00E7F4",
   "#001CD8",
   "#8C00D8",
-  "#353535",
+  "#000000",
 
   "#FF8A8A",
   "#FFB58B",
@@ -288,12 +311,61 @@ const form = reactive({
   bookId: "",
   color: "#3B82F6",
   date: "",
+  startDate: "",
   startPage: null,
   endPage: null,
   finishedBook: false,
   rating: 0,
 });
 
+// ========== Вспомогательные функции ==========
+const formatDateForInput = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+const getLastSessionForBook = (bookId) => {
+  const allSessions = sessionStore.sessions;
+  const bookSessions = allSessions.filter((s) => s.bookId === bookId);
+  if (bookSessions.length === 0) return null;
+
+  return bookSessions.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+};
+
+const autoFillStartPage = (bookId) => {
+  const lastSession = getLastSessionForBook(bookId);
+  if (lastSession && !lastSession.finishedBook) {
+    const lastPage = lastSession.endPage || lastSession.pagesRead;
+    if (lastPage) {
+      form.startPage = lastPage + 1;
+    }
+  } else if (!lastSession) {
+    form.startPage = 1;
+  }
+};
+
+// ========== Валидация дат ==========
+const validateAndFixDates = () => {
+  if (!form.startDate || !form.date) return false;
+
+  const startDateTime = new Date(form.startDate);
+  const endDateTime = new Date(form.date);
+
+  if (endDateTime < startDateTime) {
+    form.date = form.startDate;
+    return true;
+  }
+
+  return false;
+};
+
+// ========== Вычисляемые свойства ==========
 const selectedBookTitle = computed(() => {
   const book = unreadBooks.value.find((b) => b.id === form.bookId);
   return book ? book.title : "";
@@ -306,63 +378,17 @@ const pagesRead = computed(() => {
   return 0;
 });
 
-// Форматирование даты для input
-const formatDateForInput = (date) => {
-  if (!date) return "";
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
-// Получение последней сессии по книге
-const getLastSessionForBook = (bookId) => {
-  const allSessions = sessionStore.sessions;
-  const bookSessions = allSessions.filter((s) => s.bookId === bookId);
-  if (bookSessions.length === 0) return null;
-
-  // Сортируем по дате и берем последнюю
-  return bookSessions.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-};
-
-// Автозаполнение начальной страницы
-const autoFillStartPage = (bookId) => {
-  const lastSession = getLastSessionForBook(bookId);
-  if (lastSession && !lastSession.finishedBook) {
-    // Если книга не дочитана, берем последнюю страницу + 1
-    const lastPage = lastSession.endPage || lastSession.pagesRead;
-    if (lastPage) {
-      form.startPage = lastPage + 1;
-    }
-  } else if (!lastSession) {
-    // Если сессий нет, начинаем с 1 страницы
-    form.startPage = 1;
+const timeRead = computed(() => {
+  if (form.startDate && form.date && form.startDate <= form.date) {
+    const diffMs = new Date(form.date) - new Date(form.startDate);
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
   }
-};
+  return "00:00";
+});
 
-// Валидация страниц
-const validateStartPage = () => {
-  if (form.startPage && form.endPage && form.startPage > form.endPage) {
-    form.endPage = form.startPage;
-  }
-};
-
-const validateEndPage = () => {
-  if (form.startPage && form.endPage && form.endPage < form.startPage) {
-    form.startPage = form.endPage;
-  }
-};
-
-// Обработка изменения чекбокса "Книга дочитана"
-const handleFinishedBookChange = () => {
-  if (form.finishedBook && !form.rating) {
-  }
-};
-
-// Загрузка непрочитанных книг
+// ========== Загрузка данных ==========
 const loadUnreadBooks = async () => {
   try {
     unreadBooks.value = await libraryStore.getUnreadBooks();
@@ -371,7 +397,6 @@ const loadUnreadBooks = async () => {
   }
 };
 
-// Загрузка последней сессии пользователя
 const loadLastSession = () => {
   if (props.sessionToEdit?.id) return;
 
@@ -379,49 +404,38 @@ const loadLastSession = () => {
   if (lastSession && lastSession.bookId) {
     form.bookId = lastSession.bookId;
     form.color = lastSession.color || "#3B82F6";
-    // Автозаполняем начальную страницу
+    if (lastSession.startDate) {
+      form.startDate = formatDateForInput(lastSession.startDate);
+    }
+
     autoFillStartPage(form.bookId);
   }
 };
 
-// Управление дропдауном
-const toggleDropdown = () => {
-  isDropdownOpen.value = !isDropdownOpen.value;
-};
-
-const selectBook = (book) => {
-  form.bookId = book.id;
-  isDropdownOpen.value = false;
-  // При выборе книги автозаполняем начальную страницу
-  autoFillStartPage(form.bookId);
-};
-
-// Закрытие дропдауна при клике вне
-const handleClickOutside = (event) => {
-  if (
-    dropdownContainerRef.value &&
-    !dropdownContainerRef.value.contains(event.target)
-  ) {
-    isDropdownOpen.value = false;
-  }
-};
-
-// Сброс формы
+// ========== Сброс формы ==========
 const resetForm = () => {
   if (props.sessionToEdit?.id) {
+    console.log("Editing session:", props.sessionToEdit);
+
     if (props.sessionToEdit) {
       form.bookId = props.sessionToEdit.bookId;
       form.color = props.sessionToEdit.color || "#3B82F6";
       form.date = formatDateForInput(props.sessionToEdit.date);
+      form.startDate = formatDateForInput(
+        props.sessionToEdit.startDate || props.sessionToEdit.date,
+      );
       form.startPage = props.sessionToEdit.startPage || null;
       form.endPage = props.sessionToEdit.endPage || null;
       form.finishedBook = props.sessionToEdit.finishedBook || false;
       form.rating = props.sessionToEdit.rating || 0;
+
+      validateAndFixDates();
     }
   } else {
     form.bookId = "";
     form.color = "#3B82F6";
     form.date = formatDateForInput(props.initialDate);
+    form.startDate = formatDateForInput(new Date());
     form.startPage = null;
     form.endPage = null;
     form.finishedBook = false;
@@ -431,14 +445,16 @@ const resetForm = () => {
 
 // Отправка формы
 const handleSubmit = async () => {
+  validateAndFixDates();
+
   console.log(form.bookId);
-  if (form.bookId == "Выберите книгу") {
+  if (form.bookId == "Выберите книгу" || !form.bookId) {
     alert("Выберите книгу");
     return;
   }
 
   if (!form.date) {
-    alert("Выберите дату и время");
+    alert("Выберите конечную дату и время");
     return;
   }
 
@@ -447,8 +463,8 @@ const handleSubmit = async () => {
     return;
   }
 
-  if (!form.startPage || !form.endPage) {
-    alert("Укажите начальную и конечную страницы");
+  if (form.startDate && form.date && form.startDate > form.date) {
+    alert("Начальные дата/время не могут быть позже конечных");
     return;
   }
 
@@ -456,10 +472,10 @@ const handleSubmit = async () => {
 
   try {
     if (props.sessionToEdit?.id) {
-      // Редактирование сессии
       await sessionStore.updateSession(props.sessionToEdit.id, {
         color: form.color,
         date: new Date(form.date),
+        startDate: new Date(form.startDate),
         startPage: form.startPage,
         endPage: form.endPage,
         pagesRead: pagesRead.value,
@@ -467,7 +483,6 @@ const handleSubmit = async () => {
         rating: form.rating,
       });
     } else {
-      // Добавление сессии
       const selectedBook = unreadBooks.value.find((b) => b.id === form.bookId);
       if (!selectedBook) throw new Error("Книга не найдена");
 
@@ -476,6 +491,7 @@ const handleSubmit = async () => {
         bookTitle: selectedBook.title,
         color: form.color,
         date: new Date(form.date),
+        startDate: new Date(form.startDate),
         startPage: form.startPage,
         endPage: form.endPage,
         pagesRead: pagesRead.value,
@@ -494,28 +510,83 @@ const handleSubmit = async () => {
   }
 };
 
-const handleClose = () => {
-  resetForm();
-  emit("close");
+// ========== Управление дропдауном ==========
+const toggleDropdown = () => {
+  isDropdownOpen.value = !isDropdownOpen.value;
 };
 
-// Следим за открытием модалки
+const selectBook = (book) => {
+  form.bookId = book.id;
+  isDropdownOpen.value = false;
+
+  autoFillStartPage(form.bookId);
+};
+
+const handleClickOutside = (event) => {
+  if (
+    dropdownContainerRef.value &&
+    !dropdownContainerRef.value.contains(event.target)
+  ) {
+    isDropdownOpen.value = false;
+  }
+};
+
+// ========== Управление модалкой ==========
+const handleClose = () => {
+  if (isClosing.value) return;
+  isClosing.value = true;
+  isDropdownOpen.value = false;
+  resetForm();
+  emit("close");
+  setTimeout(() => {
+    isClosing.value = false;
+  }, 300);
+};
+
+const handleFinishedBookChange = () => {
+  if (form.finishedBook && !form.rating) {
+  }
+};
+
+// ========== Watchers ==========
+watch(
+  () => [form.startDate, form.date],
+  ([newStartDate, newEndDate]) => {
+    if (newStartDate && newEndDate && !loading.value) {
+      validateAndFixDates();
+    }
+  },
+  { deep: true },
+);
+
 watch(
   () => props.isOpen,
   async (isOpen) => {
     if (isOpen) {
+      document.body.classList.add("modal-open");
+      isClosing.value = false;
+
       if (!props.sessionToEdit?.id) {
         await loadUnreadBooks();
       }
+
       resetForm();
-      loadLastSession();
+
+      if (!props.sessionToEdit?.id) {
+        loadLastSession();
+      }
+
+      setTimeout(() => {
+        validateAndFixDates();
+      }, 0);
     } else {
-      isDropdownOpen.value = false;
+      document.body.classList.remove("modal-open");
     }
   },
   { immediate: true },
 );
 
+// ========== Lifecycle ==========
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
 });
@@ -540,5 +611,23 @@ onUnmounted(() => {
 
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
+}
+
+/* Скрываем через filter */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: opacity(0);
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+
+/* Делаем иконку полностью прозрачной */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  background: transparent;
+  color: transparent;
+  opacity: 0;
 }
 </style>

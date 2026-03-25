@@ -70,7 +70,7 @@
       <CalendarGrid
         :year="currentYear"
         :month="currentMonth"
-        @day-click="openDayDetails"
+        @day-click="handleCalendarClick"
       />
     </div>
 
@@ -111,7 +111,6 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { auth } from "../firebase/config";
 import { useSessionStore } from "../stores/session";
-import { useUserStore } from "../stores/user";
 import IconButton from "../components/IconButton.vue";
 import UserProfile from "../components/UserProfile.vue";
 import CalendarGrid from "../components/tracker/CalendarGrid.vue";
@@ -119,8 +118,10 @@ import SessionModal from "../components/tracker/SessionModal.vue";
 import DayDetailsModal from "../components/tracker/DayDetailsModal.vue";
 import YearPickerModal from "../components/tracker/YearPickerModal.vue";
 
+const SWIPE_THRESHOLD = 50;
+const MOVE_THRESHOLD = 10;
+
 const sessionStore = useSessionStore();
-const userStore = useUserStore();
 
 // Состояние
 const currentYear = ref(new Date().getFullYear());
@@ -131,14 +132,16 @@ const isDayDetailsOpen = ref(false);
 const isYearPickerOpen = ref(false);
 const sessionToEdit = ref(null);
 
-// Для свайпа
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
-const minSwipeDistance = 50; // минимальное расстояние для свайпа
+const touchState = ref({
+  startX: 0,
+  startY: 0,
+  currentX: 0,
+  currentY: 0,
+  hasMoved: false,
+  isHorizontalSwipe: false,
+});
 
-// Вычисляемые свойства
+// ========== Вычисляемые свойства ==========
 const currentMonthName = computed(() => {
   return new Date(currentYear.value, currentMonth.value, 1).toLocaleString(
     "ru",
@@ -152,9 +155,6 @@ const daysInMonth = computed(() => {
   return new Date(currentYear.value, currentMonth.value + 1, 0).getDate();
 });
 
-const dailyGoal = computed(() => userStore.dailyGoal || 50);
-
-// Статистика за месяц
 const monthlyPagesRead = computed(() => {
   let total = 0;
   for (let day = 1; day <= daysInMonth.value; day++) {
@@ -164,8 +164,9 @@ const monthlyPagesRead = computed(() => {
   return total;
 });
 
-// Методы навигации по месяцам
+// ========== Навигация по месяцам ==========
 const prevMonth = () => {
+  console.log("prevMonth");
   if (currentMonth.value === 0) {
     currentMonth.value = 11;
     currentYear.value--;
@@ -175,6 +176,7 @@ const prevMonth = () => {
 };
 
 const nextMonth = () => {
+  console.log("nextMonth");
   if (currentMonth.value === 11) {
     currentMonth.value = 0;
     currentYear.value++;
@@ -183,42 +185,95 @@ const nextMonth = () => {
   }
 };
 
-// Обработчики свайпа
-const onTouchStart = (event) => {
-  touchStartX = event.touches[0].clientX;
-  touchStartY = event.touches[0].clientY;
-};
-
-const onTouchMove = (event) => {
-  touchEndX = event.touches[0].clientX;
-  touchEndY = event.touches[0].clientY;
-};
-
-const onTouchEnd = () => {
-  const deltaX = touchEndX - touchStartX;
-  const deltaY = touchEndY - touchStartY;
-
-  // Проверяем, что свайп горизонтальный (по горизонтали больше, чем по вертикали)
-  if (
-    Math.abs(deltaX) > Math.abs(deltaY) &&
-    Math.abs(deltaX) > minSwipeDistance
-  ) {
-    if (deltaX > 0) {
-      // Свайп вправо - предыдущий месяц
-      prevMonth();
-    } else {
-      // Свайп влево - следующий месяц
-      nextMonth();
-    }
-  }
-};
-
 const changeYear = (year) => {
   currentYear.value = year;
   closeYearPicker();
 };
 
-// Обработчики модалок
+// ========== Обработчики свайпа ==========
+const onTouchStart = (event) => {
+  if (isSessionModalOpen.value) return;
+
+  const touch = event.touches[0];
+  if (!touch) return;
+
+  touchState.value = {
+    startX: touch.clientX,
+    startY: touch.clientY,
+    currentX: touch.clientX,
+    currentY: touch.clientY,
+    hasMoved: false,
+    isHorizontalSwipe: false,
+  };
+
+  console.log("Touch start:", touchState.value.startX, touchState.value.startY);
+};
+
+const onTouchMove = (event) => {
+  if (isSessionModalOpen.value) return;
+  console.log("onTouchMove");
+
+  const touch = event.touches[0];
+  if (!touch) return;
+
+  const deltaX = Math.abs(touch.clientX - touchState.value.startX);
+  const deltaY = Math.abs(touch.clientY - touchState.value.startY);
+
+  if (
+    !touchState.value.hasMoved &&
+    (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD)
+  ) {
+    touchState.value.hasMoved = true;
+    console.log("Movement detected");
+  }
+
+  if (touchState.value.hasMoved && deltaX > deltaY && deltaX > MOVE_THRESHOLD) {
+    touchState.value.isHorizontalSwipe = true;
+    event.preventDefault();
+  }
+
+  touchState.value.currentX = touch.clientX;
+  touchState.value.currentY = touch.clientY;
+};
+
+const onTouchEnd = () => {
+  if (isSessionModalOpen.value) return;
+
+  if (!touchState.value.hasMoved) {
+    console.log("No movement, exiting");
+    resetTouchState();
+    return;
+  }
+
+  if (touchState.value.isHorizontalSwipe) {
+    const deltaX = touchState.value.currentX - touchState.value.startX;
+    console.log("Horizontal swipe detected, deltaX:", deltaX);
+
+    if (Math.abs(deltaX) > SWIPE_THRESHOLD) {
+      if (deltaX > 0) {
+        console.log("Swipe right - previous month");
+        prevMonth();
+      } else {
+        console.log("Swipe left - next month");
+        nextMonth();
+      }
+    }
+  }
+  resetTouchState();
+};
+
+const resetTouchState = () => {
+  touchState.value = {
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+    hasMoved: false,
+    isHorizontalSwipe: false,
+  };
+};
+
+// ========== Управление модалками ==========
 const openSessionModal = (date = new Date(), session = null) => {
   selectedDate.value = date;
   sessionToEdit.value = session;
@@ -246,6 +301,14 @@ const closeYearPicker = () => {
   isYearPickerOpen.value = false;
 };
 
+const handleCalendarClick = (event) => {
+  if (touchState.value.hasMoved) {
+    console.log("Ignoring click after swipe");
+    return;
+  }
+  openDayDetails(event);
+};
+
 const onSessionSaved = () => {
   console.log("Session saved");
 };
@@ -260,7 +323,7 @@ const retrySync = () => {
   }
 };
 
-// Инициализация
+// ========== Lifecycle ==========
 onMounted(() => {
   console.log("TrackerView mounted");
   if (auth.currentUser) {
