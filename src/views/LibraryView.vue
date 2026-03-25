@@ -1,14 +1,14 @@
 <template>
   <div
-    class="min-h-screen bg-gray-200 dark:bg-gray-900 transition-colors duration-200"
+    class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200"
   >
     <!-- Шапка -->
     <div
-      class="sticky top-0 bg-gray-100 dark:bg-gray-800 z-20 border-b dark:border-gray-700 transition-colors duration-200"
+      class="sticky top-0 bg-white dark:bg-gray-800 z-20 border-b dark:border-gray-700 transition-colors duration-200 shadow-[0_6px_16px_4px_rgba(100,100,100,0.15)] dark:shadow-[0_6px_16px_4px_rgba(0,0,0,0.6)]"
     >
       <div class="p-3">
         <div class="flex justify-between items-center">
-          <h1 class="text-2xl font-bold dark:text-white">Библиотека</h1>
+          <h1 class="text-xl font-bold dark:text-white">Библиотека</h1>
           <div class="flex gap-1">
             <!-- Кнопка сортировки -->
             <IconButton

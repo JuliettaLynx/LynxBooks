@@ -1,6 +1,6 @@
 <template>
   <div
-    class="bg-gray-50 dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden dark:text-gray-200 relative"
+    class="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow dark:text-gray-200 relative"
     :class="[isGrid ? 'flex' : '']"
   >
     <!-- Три точки (только для плитки) - поверх обложки  -->
@@ -103,7 +103,7 @@
 
           <!-- Рейтинг (только для прочитанных) -->
           <div
-            v-if="book.status === 'прочитано'"
+            v-if="book.status === 'прочитано' && book.rating !== 0"
             class="text-yellow-400 dark:text-yellow-500"
           >
             <span v-for="n in 5" :key="n" class="text-lg">
