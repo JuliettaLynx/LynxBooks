@@ -10,10 +10,9 @@
       >
         <!-- Заголовок -->
         <ModalHeader :title="formattedDate" @close="close" />
-        <div
-          class="text-sm font-medium dark:text-white text-gray-600 mt-1 ml-6"
-        >
-          Статистика: {{ totalPages }} / {{ dailyGoal }}
+        <div class="text-sm dark:text-white text-gray-600 mt-1 ml-6">
+          Статистика: {{ totalPages }} страниц за
+          {{ formatTotalTime(calculateTotalTime(daySessions)) }}
         </div>
 
         <!-- Список сессий -->
@@ -38,16 +37,11 @@
                 <div class="text-sm mt-1 text-gray-600 dark:text-gray-300">
                   Время:
                   <span class="font-bold">
-                    <template v-if="session.startPage && session.endPage">
-                      {{ formatTime(session.startDate) }} →
-                      {{ formatTime(session.date) }}
-                      <span class="text-gray-400">
-                        ({{ getTimeDuration(session.startDate, session.date) }})
-                      </span>
-                    </template>
-                    <template v-else>
-                      {{ session.pagesRead || 0 }} стр.
-                    </template>
+                    {{ formatTime(session.startDate) }} →
+                    {{ formatTime(session.date) }}
+                    <span class="text-gray-400">
+                      ({{ getTimeDuration(session.startDate, session.date) }})
+                    </span>
                   </span>
                 </div>
 
@@ -61,7 +55,9 @@
                       </span>
                     </template>
                     <template v-else>
-                      {{ session.pagesRead || 0 }} стр.
+                      {{ session.startPage ? session.startPage : "NA" }}
+                      →
+                      {{ session.endPage ? session.endPage : `NA` }}
                     </template>
                   </span>
                 </div>
@@ -105,11 +101,11 @@
           </div>
         </div>
 
-        <!-- Кнопка добавления -->
         <ModalActions
           :hide-reset="true"
           submit-label="+ Добавить сессию"
           @submit="addSession"
+          @reset="clearAllSessions"
         />
       </div>
     </div>
@@ -120,6 +116,7 @@
     :is-open="isSessionModalOpen"
     :initial-date="sessionInitialDate"
     :session-to-edit="selectedSession"
+    :from-calendar="true"
     @close="closeSessionModal"
     @saved="onSessionSaved"
   />
@@ -196,6 +193,65 @@ const getTimeDuration = (startDate, endDate) => {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 };
 
+const calculateTotalTime = (sessions) => {
+  return sessions.reduce((total, session) => {
+    if (!session.startDate || !session.date) return total;
+
+    try {
+      const start =
+        session.startDate instanceof Date
+          ? session.startDate
+          : new Date(session.startDate);
+      const end =
+        session.date instanceof Date ? session.date : new Date(session.date);
+
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return total;
+
+      const diffMs = end - start;
+      if (diffMs > 0) {
+        return total + diffMs / 1000;
+      }
+    } catch (err) {
+      console.error("Error calculating time:", err);
+    }
+    return total;
+  }, 0);
+};
+
+const formatTotalTime = (totalSeconds) => {
+  if (!totalSeconds || totalSeconds <= 0) return "0 минут";
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  const declension = (number, forms) => {
+    const n = Math.abs(number) % 100;
+    const n1 = n % 10;
+    if (n > 10 && n < 20) return forms[2];
+    if (n1 > 1 && n1 < 5) return forms[1];
+    if (n1 === 1) return forms[0];
+    return forms[2];
+  };
+
+  const hourForms = ["час", "часа", "часов"];
+  const minuteForms = ["минута", "минуты", "минут"];
+
+  const hourText = hours > 0 ? `${hours} ${declension(hours, hourForms)}` : "";
+  const minuteText =
+    minutes > 0 ? `${minutes} ${declension(minutes, minuteForms)}` : "";
+
+  // Если есть и часы, и минуты
+  if (hours > 0 && minutes > 0) {
+    return `${hourText} ${minuteText}`;
+  }
+  // Если только часы
+  if (hours > 0) {
+    return hourText;
+  }
+  // Если только минуты
+  return minuteText;
+};
+
 const formatTime = (date) => {
   if (!date) return "—";
   const d = new Date(date);
@@ -216,6 +272,27 @@ const deleteSession = async (session) => {
     } catch (error) {
       console.error("Ошибка удаления:", error);
       alert("Ошибка при удалении сессии");
+    }
+  }
+};
+
+const clearAllSessions = async () => {
+  if (daySessions.value.length === 0) return;
+
+  if (
+    confirm(
+      `Удалить все ${daySessions.value.length} сессий за ${formattedDate.value}?`,
+    )
+  ) {
+    try {
+      const deletePromises = daySessions.value.map((session) =>
+        sessionStore.deleteSession(session.id),
+      );
+      await Promise.all(deletePromises);
+      emit("session-updated");
+    } catch (error) {
+      console.error("Ошибка очистки сессий:", error);
+      alert("Ошибка при удалении сессий");
     }
   }
 };

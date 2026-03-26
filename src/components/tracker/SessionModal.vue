@@ -142,23 +142,32 @@
                 Начало
               </label>
 
-              <div class="grid grid-cols-3 gap-3">
-                <div class="col-span-2">
+              <div class="grid grid-cols-12 gap-2">
+                <div class="col-span-5">
                   <input
-                    type="datetime-local"
-                    v-model="form.startDate"
+                    type="date"
+                    :value="formattedStartDate"
+                    @input="updateStartDate($event.target.value)"
                     required
-                    class="w-full h-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
-                <div class="col-span-1">
+                <div class="col-span-4">
+                  <input
+                    type="time"
+                    :value="formattedStartTime"
+                    @input="updateStartTime($event.target.value)"
+                    required
+                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div class="col-span-3">
                   <input
                     type="number"
                     v-model.number="form.startPage"
                     placeholder="№ стр."
                     min="1"
-                    class="w-full h-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -171,23 +180,32 @@
               >
                 Конец
               </label>
-              <div class="grid grid-cols-3 gap-3">
-                <div class="col-span-2">
+              <div class="grid grid-cols-12 gap-2">
+                <div class="col-span-5">
                   <input
-                    type="datetime-local"
-                    v-model="form.date"
+                    type="date"
+                    :value="formattedEndDate"
+                    @input="updateEndDate($event.target.value)"
                     required
-                    class="w-full h-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
-                <div class="col-span-1">
+                <div class="col-span-4">
+                  <input
+                    type="time"
+                    :value="formattedEndTime"
+                    @input="updateEndTime($event.target.value)"
+                    required
+                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div class="col-span-3">
                   <input
                     type="number"
                     v-model.number="form.endPage"
                     placeholder="№ стр."
                     min="1"
-                    class="w-full h-10 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -195,7 +213,7 @@
 
             <div
               v-if="
-                form.startPage && form.endPage && form.startPage <= form.endPage
+                form.startPage && form.endPage && form.startPage < form.endPage
               "
               class="leading-3 text-xs text-gray-700 dark:text-gray-300"
             >
@@ -211,7 +229,7 @@
             </div>
 
             <div
-              v-if="form.startDate && form.date && form.startDate <= form.date"
+              v-if="form.startDate && form.date && form.startDate < form.date"
               class="leading-3 text-xs text-gray-700 dark:text-gray-300"
             >
               Время сессии: {{ timeRead }}
@@ -274,6 +292,10 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  fromCalendar: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(["close", "saved"]);
@@ -286,6 +308,10 @@ const unreadBooks = ref([]);
 const isDropdownOpen = ref(false);
 const dropdownContainerRef = ref(null);
 const isClosing = ref(false);
+
+const isFromCalendar = computed(
+  () => props.fromCalendar && !props.sessionToEdit?.id,
+);
 
 const colorOptions = [
   "#EF4444",
@@ -310,8 +336,8 @@ const colorOptions = [
 const form = reactive({
   bookId: "",
   color: "#3B82F6",
-  date: "",
-  startDate: "",
+  startDate: null,
+  date: null,
   startPage: null,
   endPage: null,
   finishedBook: false,
@@ -325,9 +351,20 @@ const formatDateForInput = (date) => {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const formatTimeForInput = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
   const hours = String(d.getHours()).padStart(2, "0");
   const minutes = String(d.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  return `${hours}:${minutes}`;
+};
+
+const combineDateTime = (dateStr, timeStr) => {
+  if (!dateStr || !timeStr) return null;
+  return new Date(`${dateStr}T${timeStr}`);
 };
 
 const getLastSessionForBook = (bookId) => {
@@ -354,14 +391,10 @@ const autoFillStartPage = (bookId) => {
 const validateAndFixDates = () => {
   if (!form.startDate || !form.date) return false;
 
-  const startDateTime = new Date(form.startDate);
-  const endDateTime = new Date(form.date);
-
-  if (endDateTime < startDateTime) {
-    form.date = form.startDate;
+  if (form.date < form.startDate) {
+    form.date = new Date(form.startDate);
     return true;
   }
-
   return false;
 };
 
@@ -369,6 +402,22 @@ const validateAndFixDates = () => {
 const selectedBookTitle = computed(() => {
   const book = unreadBooks.value.find((b) => b.id === form.bookId);
   return book ? book.title : "";
+});
+
+const formattedStartDate = computed(() => {
+  return form.startDate ? formatDateForInput(form.startDate) : "";
+});
+
+const formattedStartTime = computed(() => {
+  return form.startDate ? formatTimeForInput(form.startDate) : "";
+});
+
+const formattedEndDate = computed(() => {
+  return form.date ? formatDateForInput(form.date) : "";
+});
+
+const formattedEndTime = computed(() => {
+  return form.date ? formatTimeForInput(form.date) : "";
 });
 
 const pagesRead = computed(() => {
@@ -388,6 +437,39 @@ const timeRead = computed(() => {
   return "00:00";
 });
 
+// ========== Методы обновления даты и времени ==========
+const updateStartDate = (dateStr) => {
+  const newDate = combineDateTime(dateStr, formattedStartTime.value);
+  if (newDate) {
+    form.startDate = newDate;
+    validateAndFixDates();
+  }
+};
+
+const updateStartTime = (timeStr) => {
+  const newDate = combineDateTime(formattedStartDate.value, timeStr);
+  if (newDate) {
+    form.startDate = newDate;
+    validateAndFixDates();
+  }
+};
+
+const updateEndDate = (dateStr) => {
+  const newDate = combineDateTime(dateStr, formattedEndTime.value);
+  if (newDate) {
+    form.date = newDate;
+    validateAndFixDates();
+  }
+};
+
+const updateEndTime = (timeStr) => {
+  const newDate = combineDateTime(formattedEndDate.value, timeStr);
+  if (newDate) {
+    form.date = newDate;
+    validateAndFixDates();
+  }
+};
+
 // ========== Загрузка данных ==========
 const loadUnreadBooks = async () => {
   try {
@@ -404,10 +486,6 @@ const loadLastSession = () => {
   if (lastSession && lastSession.bookId) {
     form.bookId = lastSession.bookId;
     form.color = lastSession.color || "#3B82F6";
-    if (lastSession.startDate) {
-      form.startDate = formatDateForInput(lastSession.startDate);
-    }
-
     autoFillStartPage(form.bookId);
   }
 };
@@ -420,27 +498,39 @@ const resetForm = () => {
     if (props.sessionToEdit) {
       form.bookId = props.sessionToEdit.bookId;
       form.color = props.sessionToEdit.color || "#3B82F6";
-      form.date = formatDateForInput(props.sessionToEdit.date);
-      form.startDate = formatDateForInput(
-        props.sessionToEdit.startDate || props.sessionToEdit.date,
-      );
+      form.startDate = props.sessionToEdit.startDate
+        ? new Date(props.sessionToEdit.startDate)
+        : new Date(props.sessionToEdit.date);
+      form.date = new Date(props.sessionToEdit.date);
       form.startPage = props.sessionToEdit.startPage || null;
       form.endPage = props.sessionToEdit.endPage || null;
       form.finishedBook = props.sessionToEdit.finishedBook || false;
       form.rating = props.sessionToEdit.rating || 0;
-
-      validateAndFixDates();
     }
   } else {
     form.bookId = "";
     form.color = "#3B82F6";
-    form.date = formatDateForInput(props.initialDate);
-    form.startDate = formatDateForInput(new Date());
     form.startPage = null;
     form.endPage = null;
     form.finishedBook = false;
     form.rating = 0;
+
+    const now = new Date();
+
+    if (isFromCalendar.value) {
+      const fixedDate = new Date(props.initialDate);
+      fixedDate.setHours(now.getHours(), now.getMinutes());
+      form.startDate = fixedDate;
+      form.date = new Date(fixedDate);
+      form.date.setMinutes(form.date.getMinutes() + 30); // По умолчанию +30 минут
+    } else {
+      form.startDate = new Date();
+      form.date = new Date();
+      form.date.setMinutes(form.date.getMinutes() + 30);
+    }
   }
+
+  validateAndFixDates();
 };
 
 // Отправка формы
@@ -448,7 +538,7 @@ const handleSubmit = async () => {
   validateAndFixDates();
 
   console.log(form.bookId);
-  if (form.bookId == "Выберите книгу" || !form.bookId) {
+  if (!form.bookId && !props.sessionToEdit?.id) {
     alert("Выберите книгу");
     return;
   }
@@ -474,8 +564,8 @@ const handleSubmit = async () => {
     if (props.sessionToEdit?.id) {
       await sessionStore.updateSession(props.sessionToEdit.id, {
         color: form.color,
-        date: new Date(form.date),
-        startDate: new Date(form.startDate),
+        date: form.date,
+        startDate: form.startDate,
         startPage: form.startPage,
         endPage: form.endPage,
         pagesRead: pagesRead.value,
@@ -490,8 +580,8 @@ const handleSubmit = async () => {
         bookId: form.bookId,
         bookTitle: selectedBook.title,
         color: form.color,
-        date: new Date(form.date),
-        startDate: new Date(form.startDate),
+        date: form.date,
+        startDate: form.startDate,
         startPage: form.startPage,
         endPage: form.endPage,
         pagesRead: pagesRead.value,
@@ -518,7 +608,6 @@ const toggleDropdown = () => {
 const selectBook = (book) => {
   form.bookId = book.id;
   isDropdownOpen.value = false;
-
   autoFillStartPage(form.bookId);
 };
 
@@ -572,7 +661,7 @@ watch(
 
       resetForm();
 
-      if (!props.sessionToEdit?.id) {
+      if (!props.sessionToEdit?.id && !props.fromCalendar) {
         loadLastSession();
       }
 
@@ -613,21 +702,18 @@ onUnmounted(() => {
   animation: fadeIn 0.2s ease-out;
 }
 
-/* Скрываем через filter */
-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  filter: opacity(0);
-  width: 100%;
-  height: 100%;
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
   position: absolute;
   right: 0;
+  width: 100%;
+  height: 100%;
   cursor: pointer;
-  z-index: 10;
 }
 
-/* Делаем иконку полностью прозрачной */
-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  background: transparent;
-  color: transparent;
-  opacity: 0;
+input[type="date"],
+input[type="time"] {
+  position: relative;
 }
 </style>

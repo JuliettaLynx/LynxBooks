@@ -48,12 +48,14 @@
     </div>
 
     <!-- Индикатор загрузки или ошибка -->
+    <!-- 
     <div v-if="sessionStore.loading" class="p-4 text-center">
       <div class="inline-block text-2xl animate-spin">⌛</div>
       <p class="text-gray-500 dark:text-gray-400 mt-2">Загрузка сессий...</p>
     </div>
+    -->
 
-    <div v-else-if="sessionStore.error" class="p-4 text-center">
+    <div v-if="sessionStore.error" class="p-4 text-center">
       <p class="text-red-500 dark:text-red-400">
         Ошибка: {{ sessionStore.error }}
       </p>
