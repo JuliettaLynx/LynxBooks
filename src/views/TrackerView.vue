@@ -8,7 +8,7 @@
   >
     <!-- Шапка -->
     <div
-      class="sticky top-0 bg-white dark:bg-gray-800 z-10 border-b dark:border-gray-700 transition-colors duration-200 shadow-[0_6px_16px_4px_rgba(100,100,100,0.15)] dark:shadow-[0_6px_16px_4px_rgba(0,0,0,0.6)]"
+      class="sticky top-0 bg-white dark:bg-gray-800 z-10 border-b dark:border-gray-700 transition-colors duration-200 shadow-[0_6px_16px_4px_rgba(0,0,0,0.15)] dark:shadow-[0_6px_16px_4px_rgba(0,0,0,0.2)]"
     >
       <div class="p-3">
         <div class="flex justify-between items-center">
@@ -16,7 +16,7 @@
           <div class="flex gap-2 items-center">
             <button
               @click="openYearPicker"
-              class="px-3 py-1 relative right-4 text-sm font-bold bg-gray-100 dark:bg-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              class="px-3 py-1 relative right-4 text-sm font-bold bg-gray-100 dark:bg-gray-400 rounded-lg transition-colors"
             >
               {{ currentYear }}
             </button>

@@ -26,17 +26,16 @@
       <!-- Цветные секции -->
       <div
         v-if="getProgressSegments(day).length > 0"
-        class="absolute inset-0 flex"
+        class="absolute inset-0 flex flex-col-reverse"
       >
         <div
           v-for="(segment, idx) in getProgressSegments(day)"
           :key="idx"
-          class="h-full"
+          class="w-full transition-all duration-200 opacity-60"
           :style="{
-            width: `${segment.widthPercent}%`,
+            height: `${segment.heightPercent}%`,
             backgroundColor: segment.color,
           }"
-          :title="`${segment.bookTitle}: ${segment.pages}`"
         ></div>
       </div>
 
@@ -96,10 +95,10 @@ const getSessionsForDay = (day) => {
   const date = new Date(props.year, props.month, day);
   const sessions = sessionStore.getSessionsByDate(date);
 
-  // Сортируем по времени создания
+  // Сортируем по времени
   return [...sessions].sort((a, b) => {
-    const timeA = a.createdAt?.getTime?.() || 0;
-    const timeB = b.createdAt?.getTime?.() || 0;
+    const timeA = a.date?.getTime?.() || 0;
+    const timeB = b.date?.getTime?.() || 0;
     return timeA - timeB;
   });
 };
@@ -122,7 +121,6 @@ const getProgressSegments = (day) => {
 
   // Если общее количество страниц меньше или равно дневной цели
   if (totalPages <= dailyGoal) {
-    // Каждая книга занимает процент от дневной цели
     for (const session of sessions) {
       const pagesRead = session.pagesRead || 0;
       const heightPercent = (pagesRead / dailyGoal) * 100;
@@ -135,7 +133,7 @@ const getProgressSegments = (day) => {
       });
     }
   } else {
-    // Если страниц больше цели, считаем пропорции между книгами
+    // Если страниц больше цели, считаем пропорции относительно общей суммы
     for (const session of sessions) {
       const pagesRead = session.pagesRead || 0;
       const heightPercent = (pagesRead / totalPages) * 100;

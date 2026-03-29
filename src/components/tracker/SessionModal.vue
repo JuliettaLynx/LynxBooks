@@ -117,7 +117,7 @@
               >
                 Цвет сессии
               </label>
-              <div class="grid grid-cols-8 gap-2">
+              <div class="grid grid-cols-8 gap-2 opacity-60">
                 <button
                   v-for="color in colorOptions"
                   :key="color"
@@ -314,23 +314,14 @@ const isFromCalendar = computed(
 );
 
 const colorOptions = [
-  "#EF4444",
-  "#EF8544",
-  "#EFC144",
-  "#32D800",
-  "#00E7F4",
-  "#001CD8",
-  "#8C00D8",
-  "#000000",
-
-  "#FF8A8A",
-  "#FFB58B",
-  "#FFDA7D",
-  "#94FF74",
-  "#74F8FF",
-  "#8494FF",
-  "#DC9FFF",
-  "#9CA3AF",
+  "#FF0000",
+  "#FF7700",
+  "#FFE500",
+  "#15FF00",
+  "#00F6FF",
+  "#006EFF",
+  "#8700FF",
+  "#FF00C7",
 ];
 
 const form = reactive({
