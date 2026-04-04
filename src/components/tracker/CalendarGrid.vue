@@ -4,7 +4,7 @@
     <div
       v-for="day in weekDays"
       :key="day"
-      class="text-center text-xs font-medium text-gray-500 dark:text-gray-400"
+      class="text-center text-xs font-medium text-black dark:text-white"
     >
       {{ day }}
     </div>
@@ -20,7 +20,7 @@
     <div
       v-for="day in daysInMonth"
       :key="day"
-      class="relative aspect-[1/2] border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+      class="relative aspect-[1/2] border border-border dark:border-border-dark bg-white dark:bg-bg-secondary-dark cursor-pointer rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
       @click="$emit('day-click', new Date(year, month, day))"
     >
       <!-- Цветные секции -->

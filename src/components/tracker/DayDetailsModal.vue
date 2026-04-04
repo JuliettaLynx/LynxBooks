@@ -6,7 +6,7 @@
       @click.self="close"
     >
       <div
-        class="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl max-h-[90vh] flex flex-col"
+        class="bg-white dark:bg-bg-secondary-dark w-full max-w-md rounded-2xl max-h-[90vh] flex flex-col"
       >
         <!-- Заголовок -->
         <ModalHeader :title="formattedDate" @close="close" />
@@ -20,13 +20,13 @@
           <div
             v-for="session in daySessions"
             :key="session.id"
-            class="shadow-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg p-3"
+            class="shadow-md border border-border dark:border-border-dark bg-white dark:bg-border-dark/40 rounded-lg p-3"
           >
             <div class="flex justify-between items-start">
               <div class="flex-1">
                 <div class="flex items-center gap-2">
                   <div
-                    class="w-3 h-3 rounded-full"
+                    class="w-3 h-3 rounded-sm flex-shrink-0"
                     :style="{ backgroundColor: session.color }"
                   ></div>
                   <h4 class="font-medium dark:text-white">
@@ -74,17 +74,17 @@
                 </div>
               </div>
 
-              <div class="flex gap-1">
+              <div class="flex flex-col gap-1">
                 <button
                   @click="editSession(session)"
-                  class="p-1 text-gray-400 hover:text-blue-700 dark:text-gray-300"
+                  class="py-1 px-1.5 text-base text-gray-400 hover:text-blue-700 dark:text-gray-300 rounded-lg hover:bg-purple-700/10 dark:hover:bg-border-dark"
                   title="Редактировать"
                 >
                   ✎
                 </button>
                 <button
                   @click="deleteSession(session)"
-                  class="p-1 text-red-600 hover:text-red-700 dark:text-red-400"
+                  class="py-1 px-1.5 text-base text-red-600 hover:text-red-700 dark:text-red-400 rounded-lg hover:bg-purple-700/10 dark:hover:bg-border-dark"
                   title="Удалить"
                 >
                   🗑

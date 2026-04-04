@@ -5,10 +5,10 @@
     @click.self="close"
   >
     <div
-      class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm transform transition-all"
+      class="bg-white dark:bg-bg-secondary-dark w-full max-w-md rounded-2xl max-h-[90vh] flex flex-col"
     >
       <!-- Заголовок -->
-      <div class="border-b dark:border-gray-700 p-4">
+      <div class="border-b border-border dark:border-border-dark p-4">
         <h3 class="text-lg font-semibold dark:text-white">Выберите год</h3>
       </div>
 
@@ -22,8 +22,8 @@
             class="px-3 py-2 text-center rounded-lg transition-colors"
             :class="[
               year === currentYear
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600',
+                ? 'bg-accent text-white'
+                : 'border border-border dark:border-border-dark bg-white dark:bg-border-dark/40 text-gray-900 dark:text-white hover:bg-purple-700/10 dark:hover:bg-border-dark',
             ]"
           >
             {{ year }}
@@ -32,16 +32,18 @@
       </div>
 
       <!-- Кнопки -->
-      <div class="border-t dark:border-gray-700 p-4 flex gap-3">
+      <div
+        class="border-t border-border dark:border-border-dark p-4 flex gap-3"
+      >
         <button
           @click="close"
-          class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          class="flex-1 px-4 py-2 bg-white dark:bg-border-dark/40 border border-border dark:border-border-dark rounded-lg text-gray-700 dark:text-gray-300 hover:bg-purple-700/10 dark:hover:bg-border-dark transition-colors"
         >
           Отмена
         </button>
         <button
           @click="selectYear(currentYear)"
-          class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          class="flex-1 px-4 py-2 bg-accent text-white rounded-lg transition-colors"
         >
           Выбрать
         </button>

@@ -1,7 +1,6 @@
 <template>
   <button
     class="p-1 rounded-lg transition-colors duration-200 focus:outline-none"
-    :class="[variant === 'primary' ? 'text-blue-600' : 'text-gray-600']"
     @click="$emit('click')"
   >
     <span class="text-lg" v-if="icon">{{ icon }}</span>

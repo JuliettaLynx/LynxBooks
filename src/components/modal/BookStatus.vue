@@ -42,7 +42,7 @@ const statuses = [
 
 const getStatusClass = (status) => {
   const baseClass =
-    "border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700";
+    "dark:bg-border-dark/40 border-border dark:border-border-dark hover:bg-purple-700/10 dark:hover:bg-border-dark";
   const activeClasses = {
     "не прочитано":
       "bg-yellow-100 border-yellow-300 dark:bg-yellow-900 dark:border-yellow-700",

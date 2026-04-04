@@ -1,22 +1,24 @@
 <template>
   <div
     ref="trackerContainer"
-    class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 touch-pan-y"
+    class="min-h-screen bg-white dark:bg-bg-primary-dark transition-colors duration-200 touch-pan-y"
     @touchstart="onTouchStart"
     @touchmove="onTouchMove"
     @touchend="onTouchEnd"
   >
     <!-- Шапка -->
     <div
-      class="sticky top-0 bg-white dark:bg-gray-800 z-10 border-b dark:border-gray-700 transition-colors duration-200 shadow-[0_6px_16px_4px_rgba(0,0,0,0.15)] dark:shadow-[0_6px_16px_4px_rgba(0,0,0,0.2)]"
+      class="sticky top-0 z-20 border-b border-border dark:border-border-dark bg-bg-secondary dark:bg-bg-secondary-dark text-black dark:text-bg-secondary shadow-[0_6px_16px_6px_rgba(71,0,102,0.1)] dark:shadow-[0_6px_16px_6px_rgba(0,0,0,0.4)] transition-colors duration-200"
     >
       <div class="p-3">
         <div class="flex justify-between items-center">
-          <h1 class="text-xl font-bold dark:text-white">Трекер чтения</h1>
+          <h1 class="text-xl tracking-wider font-bold dark:text-white">
+            Трекер
+          </h1>
           <div class="flex gap-2 items-center">
             <button
               @click="openYearPicker"
-              class="px-3 py-1 relative right-4 text-sm font-bold bg-gray-100 dark:bg-gray-400 rounded-lg transition-colors"
+              class="px-4 py-1 relative right-4 dark:text-white text-sm font-bold border border-border dark:border-border-dark rounded-lg transition-colors"
             >
               {{ currentYear }}
             </button>
@@ -80,7 +82,7 @@
     <IconButton
       icon="+"
       variant="primary"
-      class="fixed z-20 right-4 bottom-20 w-14 h-14 bg-blue-600 dark:bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 text-2xl flex items-center justify-center transition-colors duration-200"
+      class="fixed z-20 right-4 bottom-20 w-14 h-14 bg-accent text-white dark:text-black rounded-full shadow-lg hover:bg-accent/60 text-2xl flex items-center justify-center transition-colors duration-200"
       @click="openSessionModal"
     />
 

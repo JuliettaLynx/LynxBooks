@@ -3,7 +3,7 @@
     <div class="relative">
       <!-- Превью или заглушка -->
       <div
-        class="w-28 h-28 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-4xl text-gray-400 dark:text-gray-500 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border-2 border-dashed border-gray-300 dark:border-gray-600 overflow-hidden"
+        class="w-28 h-28 rounded-full bg-white dark:bg-border-dark/40 flex items-center justify-center text-4xl text-gray-400 dark:text-gray-500 cursor-pointer hover:bg-purple-700/10 dark:hover:bg-border-dark transition-colors border-2 border-dashed border-border dark:border-border-dark overflow-hidden"
         @click="openCropperModal"
       >
         <img
@@ -36,11 +36,11 @@
         @click.self="closeCropperModal"
       >
         <div
-          class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl flex flex-col max-h-[90vh]"
+          class="bg-white dark:bg-bg-secondary-dark rounded-2xl w-full max-w-2xl flex flex-col max-h-[90vh]"
         >
           <!-- Заголовок -->
           <div
-            class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700"
+            class="flex items-center justify-between p-4 border-b border-border dark:border-border-dark"
           >
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
               Редактировать аватар
@@ -55,10 +55,7 @@
 
           <!-- Кнопка загрузки нового изображения -->
           <div class="px-4 pt-2 flex items-center gap-2">
-            <button
-              @click="uploadNewImage"
-              class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-            >
+            <button @click="uploadNewImage" class="text-sm text-accent">
               Загрузить изображение
             </button>
           </div>
@@ -84,17 +81,17 @@
 
           <!-- Действия -->
           <div
-            class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700"
+            class="flex justify-end gap-2 p-4 border-t border-border dark:border-border-dark"
           >
             <button
               @click="closeCropperModal"
-              class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              class="px-4 py-2 border border-border dark:border-border-dark text-gray-700 dark:text-gray-300 hover:bg-purple-700/10 dark:hover:bg-border-dark rounded-lg transition-colors"
             >
               Отмена
             </button>
             <button
               @click="applyCrop"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              class="px-4 py-2 border border-border dark:border-border-dark bg-accent/60 text-white rounded-lg transition-colors"
             >
               Применить
             </button>

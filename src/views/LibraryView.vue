@@ -1,21 +1,23 @@
 <template>
   <div
-    class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200"
+    class="min-h-screen bg-white dark:bg-bg-primary-dark transition-colors duration-200"
   >
     <!-- Шапка -->
     <div
-      class="sticky top-0 bg-white dark:bg-gray-800 z-20 border-b dark:border-gray-700 transition-colors duration-200 shadow-[0_6px_16px_4px_rgba(0,0,0,0.15)] dark:shadow-[0_6px_16px_4px_rgba(0,0,0,0.2)]"
+      class="sticky top-0 z-20 border-b border-border dark:border-border-dark bg-white dark:bg-bg-secondary-dark text-black dark:text-white shadow-[0_6px_16px_6px_rgba(71,0,102,0.1)] dark:shadow-[0_6px_16px_6px_rgba(0,0,0,0.4)] transition-colors duration-200"
     >
       <div class="p-3">
         <div class="flex justify-between items-center">
-          <h1 class="text-xl font-bold dark:text-white">Библиотека</h1>
-          <div class="flex gap-1">
+          <h1 class="text-xl tracking-wider font-bold dark:text-white">
+            Библиотека
+          </h1>
+          <div class="flex gap-1 text-black dark:text-white">
             <!-- Кнопка сортировки -->
             <IconButton
               :icon="sortIcon"
               :variant="'primary'"
               @click="cycleSortMode"
-              class="text-xl dark:text-gray-300"
+              class="text-xl"
             />
 
             <!-- Кнопка фильтра -->
@@ -23,7 +25,7 @@
               :icon="filterIcon"
               :variant="'primary'"
               @click="cycleFilterMode"
-              class="text-xl dark:text-gray-300"
+              class="text-xl"
             />
 
             <!-- Кнопка переключения режима отображения -->
@@ -31,7 +33,7 @@
               :icon="viewMode === 'grid' ? '⊞' : '☰'"
               :variant="'primary'"
               @click="toggleViewMode"
-              class="text-xl dark:text-gray-300"
+              class="text-xl text-center w-10"
             />
 
             <!-- Иконка профиля -->
@@ -62,7 +64,7 @@
       </p>
       <button
         @click="libraryStore.loadBooks"
-        class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg"
+        class="mt-2 rounded-lg bg-accent px-4 py-2 text-white"
       >
         Повторить
       </button>
@@ -71,7 +73,6 @@
     <!-- Список книг -->
     <div v-else class="p-4">
       <div v-if="filteredBooks.length === 0" class="text-center py-8">
-        <span class="text-6xl mb-4 block">📚</span>
         <p class="text-gray-500 dark:text-gray-400">Книги не найдены</p>
         <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">
           {{
@@ -105,7 +106,7 @@
     <IconButton
       icon="+"
       variant="primary"
-      class="fixed z-20 right-4 bottom-20 w-14 h-14 bg-blue-600 dark:bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 text-2xl flex items-center justify-center transition-colors duration-200"
+      class="fixed bottom-20 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-accent hover:bg-accent/60 text-2xl text-white dark:text-black shadow-lg transition-colors duration-200"
       @click="openModal"
     />
 

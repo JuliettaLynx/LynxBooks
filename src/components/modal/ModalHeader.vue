@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex-shrink-0 border-b dark:border-gray-700 p-4 flex justify-between items-center"
+    class="flex-shrink-0 border-b border-border dark:border-border-dark p-4 flex justify-between items-center"
   >
     <h2 class="text-lg font-semibold dark:text-white">{{ title }}</h2>
     <IconButton icon="✕" @click="$emit('close')" class="dark:text-gray-400" />

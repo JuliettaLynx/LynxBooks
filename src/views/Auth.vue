@@ -1,14 +1,14 @@
 <template>
   <div
-    class="min-h-screen bg-gray-200 dark:bg-gray-900 transition-colors duration-200 flex items-center justify-center p-4"
+    class="min-h-screen bg-white transition-colors duration-200 dark:bg-bg-primary-dark flex items-center justify-center p-4"
   >
     <div class="w-full max-w-md">
       <!-- Шапка с заголовком и темой -->
       <div
-        class="bg-gray-100 dark:bg-gray-800 rounded-t-2xl p-4 border-b border-gray-200 dark:border-gray-700"
+        class="bg-white dark:bg-bg-secondary-dark text-black dark:text-white rounded-t-2xl p-4 border-b border-border dark:border-border-dark"
       >
         <div class="flex justify-between items-center">
-          <h1 class="text-2xl font-bold dark:text-white">
+          <h1 class="text-2xl tracking-wider font-bold dark:text-white">
             {{ isLoginMode ? "Вход" : "Регистрация" }}
           </h1>
           <ThemeToggle />
@@ -16,7 +16,9 @@
       </div>
 
       <!-- Основная форма -->
-      <div class="bg-white dark:bg-gray-800 rounded-b-2xl p-6 shadow-lg">
+      <div
+        class="bg-white dark:bg-bg-secondary-dark rounded-b-2xl p-6 shadow-lg"
+      >
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <!-- Имя (только при регистрации) -->
           <div v-if="!isLoginMode" class="space-y-1">
@@ -29,7 +31,7 @@
               v-model="displayName"
               type="text"
               placeholder="Как к вам обращаться?"
-              class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white transition-colors duration-200"
+              class="w-full px-4 py-2 bg-white dark:bg-border-dark/40 border border-border dark:border-border-dark rounded-lg dark:text-white transition-colors duration-200"
             />
           </div>
 
@@ -45,7 +47,7 @@
               type="email"
               required
               placeholder="your@email.com"
-              class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white transition-colors duration-200"
+              class="w-full px-4 py-2 bg-white dark:bg-border-dark/40 border border-border dark:border-border-dark rounded-lg dark:text-white transition-colors duration-200"
             />
           </div>
 
@@ -64,7 +66,7 @@
                 :placeholder="
                   isLoginMode ? 'Введите пароль' : 'Минимум 6 символов'
                 "
-                class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-white transition-colors duration-200 pr-10"
+                class="w-full px-4 py-2 bg-white dark:bg-border-dark/40 border border-border dark:border-border-dark rounded-lg dark:text-white transition-colors duration-200 pr-10"
               />
               <button
                 type="button"
@@ -88,7 +90,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full py-3 bg-accent/80 hover:bg-accent/60 font-medium text-black dark:text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="!loading">
               {{ isLoginMode ? "Войти" : "Зарегистрироваться" }}
@@ -103,12 +105,12 @@
           <div class="relative my-6">
             <div class="absolute inset-0 flex items-center">
               <div
-                class="w-full border-t border-gray-300 dark:border-gray-600"
+                class="w-full border-t border-border dark:border-border-dark"
               ></div>
             </div>
             <div class="relative flex justify-center text-sm">
               <span
-                class="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+                class="px-2 bg-white dark:bg-border-dark rounded-lg text-gray-500 dark:text-gray-400"
               >
                 или
               </span>
@@ -120,7 +122,7 @@
             type="button"
             @click="handleGoogleLogin"
             :disabled="loading"
-            class="w-full py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            class="w-full py-3 bg-white dark:bg-border-dark/40 border border-border dark:border-border-dark hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <img
               src="https://www.google.com/favicon.ico"
@@ -137,7 +139,7 @@
             <button
               type="button"
               @click="toggleMode"
-              class="text-blue-600 dark:text-blue-400 hover:underline font-medium ml-1"
+              class="text-accent hover:underline font-medium ml-1"
             >
               {{ isLoginMode ? "Создать" : "Войти" }}
             </button>

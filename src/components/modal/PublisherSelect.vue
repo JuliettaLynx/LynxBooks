@@ -14,7 +14,7 @@
         @keydown.esc="closeDropdown"
         @blur="handleBlur"
         :placeholder="placeholder"
-        class="w-full mt-1.5 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-600 bg-white dark:bg-gray-700 dark:text-white"
+        class="w-full mt-1.5 px-3 py-2 border border-border dark:border-border-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-white dark:bg-border-dark/40 dark:text-white"
       />
     </div>
 
@@ -23,13 +23,13 @@
       v-if="
         isOpen && (startsWithResults.length > 0 || containsResults.length > 0)
       "
-      class="absolute text-sm z-10 w-full mt-1 bg-white dark:bg-gray-900 dark:text-gray-100 border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+      class="absolute text-sm z-10 w-full mt-1 bg-white dark:bg-bg-primary-dark dark:text-gray-100 border border-purple-400/50 rounded-lg shadow-lg max-h-60 overflow-y-auto"
     >
       <ul>
         <!-- Группа "Начинается с" -->
         <li
           v-if="startsWithResults.length > 0"
-          class="px-4 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 sticky top-0"
+          class="px-4 py-1 text-xs font-semibold text-black dark:text-white bg-purple-100 dark:bg-border-dark sticky top-0"
         >
           Начинается с "{{ searchQuery }}"
         </li>
@@ -37,28 +37,21 @@
           v-for="(publisher, index) in startsWithResults"
           :key="publisher.id"
           @mousedown.prevent="selectPublisher(publisher.name)"
-          @touchstart.prevent="selectPublisher(publisher.name)"
           @mouseenter="highlightedIndex = getAbsoluteIndex(index, 'starts')"
           :class="[
             'px-4 py-2 cursor-pointer text-sm transition-colors',
             highlightedIndex === getAbsoluteIndex(index, 'starts')
-              ? 'bg-blue-500 text-white'
-              : 'hover:bg-gray-100 dark:hover:bg-gray-700',
+              ? 'bg-accent text-white'
+              : 'hover:bg-purple-400/10 dark:hover:bg-border-dark/50',
           ]"
         >
           {{ publisher.name }}
         </li>
 
-        <!-- Разделитель, если есть обе группы -->
-        <li
-          v-if="startsWithResults.length > 0 && containsResults.length > 0"
-          class="border-t border-gray-200 dark:border-gray-700 my-1"
-        ></li>
-
         <!-- Группа "Содержит" -->
         <li
           v-if="containsResults.length > 0"
-          class="px-4 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 sticky top-0"
+          class="px-4 py-1 text-xs font-semibold text-black dark:text-white bg-purple-100 dark:bg-border-dark sticky top-0"
         >
           Содержит "{{ searchQuery }}"
         </li>
@@ -66,13 +59,12 @@
           v-for="(publisher, index) in containsResults"
           :key="`contains-${publisher.id}`"
           @mousedown.prevent="selectPublisher(publisher.name)"
-          @touchstart.prevent="selectPublisher(publisher.name)"
           @mouseenter="highlightedIndex = getAbsoluteIndex(index, 'contains')"
           :class="[
             'px-4 py-2 text-sm cursor-pointer transition-colors',
             highlightedIndex === getAbsoluteIndex(index, 'contains')
-              ? 'bg-blue-500 text-white'
-              : 'hover:bg-gray-100 dark:hover:bg-gray-700',
+              ? 'bg-accent text-white'
+              : 'hover:bg-purple-400/10 dark:hover:bg-border-dark/50',
           ]"
         >
           {{ publisher.name }}
@@ -361,7 +353,6 @@ watch([startsWithResults, containsResults], () => {
 
 onMounted(() => {
   document.addEventListener("mousedown", handleClickOutside);
-  document.addEventListener("touchstart", handleClickOutside);
 
   // Для мобильных устройств - принудительное обновление при изменении значения
   if (inputRef.value) {
@@ -375,7 +366,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener("mousedown", handleClickOutside);
-  document.removeEventListener("touchstart", handleClickOutside);
 
   if (inputRef.value) {
     inputRef.value.removeEventListener("input", () => {});

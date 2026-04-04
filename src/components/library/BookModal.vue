@@ -6,7 +6,7 @@
       @click.self="handleClose"
     >
       <div
-        class="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl max-h-[90vh] flex flex-col"
+        class="bg-white dark:bg-bg-secondary-dark w-full max-w-md rounded-2xl max-h-[90vh] flex flex-col"
       >
         <ModalHeader
           :title="bookToEdit?.id ? 'Редактировать книгу' : 'Добавить книгу'"

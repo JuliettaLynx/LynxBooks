@@ -7,7 +7,7 @@
     >
       <div
         ref="modalRef"
-        class="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl max-h-[90vh] flex flex-col"
+        class="bg-white dark:bg-bg-secondary-dark w-full max-w-md rounded-2xl max-h-[90vh] flex flex-col"
       >
         <ModalHeader
           :title="
@@ -35,7 +35,7 @@
                 <button
                   type="button"
                   @click="toggleDropdown"
-                  class="w-full px-3 py-2 text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex justify-between items-center"
+                  class="w-full px-3 py-2 text-left border border-border dark:border-border-dark rounded-lg bg-white dark:bg-border-dark/40 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent flex justify-between items-center"
                 >
                   <span
                     :class="
@@ -65,13 +65,13 @@
                 <!-- Выпадающий список -->
                 <div
                   v-if="isDropdownOpen"
-                  class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                  class="absolute z-10 w-full mt-1 bg-white dark:bg-bg-primary-dark border border-border dark:border-border-dark rounded-lg shadow-lg max-h-60 overflow-y-auto"
                 >
                   <div
                     v-for="book in unreadBooks"
                     :key="book.id"
                     @click="selectBook(book)"
-                    class="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0"
+                    class="px-3 py-2 cursor-pointer hover:bg-purple-400/10 dark:hover:bg-border-dark/50 transition-colors border-b border-border dark:border-border-dark last:border-0"
                     :class="{
                       'bg-blue-50 dark:bg-blue-900/20': form.bookId === book.id,
                     }"
@@ -104,7 +104,7 @@
                 Книга
               </label>
               <div
-                class="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white"
+                class="px-3 py-2 bg-white dark:bg-border-dark/40 rounded-lg text-gray-900 dark:text-white"
               >
                 {{ sessionToEdit.bookTitle }}
               </div>
@@ -149,7 +149,7 @@
                     :value="formattedStartDate"
                     @input="updateStartDate($event.target.value)"
                     required
-                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-1 py-2 border border-border dark:border-border-dark rounded-lg bg-white dark:bg-border-dark/40 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                   />
                 </div>
                 <div class="col-span-4">
@@ -158,7 +158,7 @@
                     :value="formattedStartTime"
                     @input="updateStartTime($event.target.value)"
                     required
-                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-1 py-2 border border-border dark:border-border-dark rounded-lg bg-white dark:bg-border-dark/40 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                   />
                 </div>
                 <div class="col-span-3">
@@ -167,7 +167,7 @@
                     v-model.number="form.startPage"
                     placeholder="№ стр."
                     min="1"
-                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-1 py-2 border border-border dark:border-border-dark rounded-lg bg-white dark:bg-border-dark/40 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                   />
                 </div>
               </div>
@@ -187,7 +187,7 @@
                     :value="formattedEndDate"
                     @input="updateEndDate($event.target.value)"
                     required
-                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-1 py-2 border border-border dark:border-border-dark rounded-lg bg-white dark:bg-border-dark/40 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                   />
                 </div>
                 <div class="col-span-4">
@@ -196,7 +196,7 @@
                     :value="formattedEndTime"
                     @input="updateEndTime($event.target.value)"
                     required
-                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-1 py-2 border border-border dark:border-border-dark rounded-lg bg-white dark:bg-border-dark/40 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                   />
                 </div>
                 <div class="col-span-3">
@@ -205,7 +205,7 @@
                     v-model.number="form.endPage"
                     placeholder="№ стр."
                     min="1"
-                    class="w-full h-10 px-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="w-full h-10 px-1 py-2 border border-border dark:border-border-dark rounded-lg bg-white dark:bg-border-dark/40 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                   />
                 </div>
               </div>
@@ -243,18 +243,18 @@
 
             <!-- Чекбокс "Книга дочитана" -->
             <div
-              class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full px-3 py-2.5 border border-border dark:border-border-dark rounded-lg bg-white dark:bg-border-dark/40 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <input
                 type="checkbox"
                 id="finishedBook"
                 v-model="form.finishedBook"
                 @change="handleFinishedBookChange"
-                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                class="w-4 h-4 text-accent rounded focus:ring-accent cursor-pointer"
               />
               <label
                 for="finishedBook"
-                class="ml-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
+                class="ml-2 text-sm text-black dark:text-white cursor-pointer"
               >
                 Книга дочитана
               </label>

@@ -3,8 +3,8 @@
     <!-- Иконка профиля -->
     <button
       @click.stop="toggleMenu"
-      class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg hover:ring-2 hover:ring-blue-300 transition-all overflow-hidden"
-      :class="{ 'ring-2 ring-blue-400': isOpen }"
+      class="w-10 h-10 rounded-full bg-green-300 flex items-center justify-center text-black font-bold text-lg transition-all overflow-hidden"
+      :class="{ 'ring-2 ring-accent': isOpen }"
     >
       <img
         v-if="userAvatar"
@@ -20,10 +20,12 @@
     <!-- Выпадающее меню -->
     <div
       v-if="isOpen"
-      class="absolute right-0 top-12 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+      class="absolute z-50 right-0 top-12 w-80 bg-white dark:bg-bg-secondary-dark rounded-2xl shadow-xl border border-border dark:border-border-dark text-black dark:text-white overflow-hidden"
     >
       <!-- Шапка профиля -->
-      <div class="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+      <div
+        class="p-4 bg-purple-100 dark:bg-border-dark border-b border-border dark:border-border-dark"
+      >
         <button
           @click.stop="openSection('profile')"
           class="rounded-lg w-72 flex transition-colors"
@@ -48,26 +50,26 @@
             <p class="font-bold truncate">
               {{ user?.displayName || "Пользователь" }}
             </p>
-            <p class="text-sm text-white/80 truncate">{{ user?.email }}</p>
+            <p class="text-sm truncate">{{ user?.email }}</p>
           </div>
 
           <div class="w-12">
-            <span class="text-white relative top-1 left-2 text-xl">✎</span>
+            <span class="relative top-1 left-2 text-xl">✎</span>
           </div>
         </button>
       </div>
 
       <!-- Статистика -->
-      <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div class="p-4 border-b border-border dark:border-border-dark">
         <div class="flex justify-between items-center">
-          <span class="text-gray-600 dark:text-gray-400">Цель на день:</span>
+          <span class="">Цель на день:</span>
 
           <button
             @click.stop="openSection('goal')"
             class="rounded-lg flex items-center gap-3 transition-colors"
           >
             <span
-              class="font-bold relative right-1 text-blue-600 dark:text-blue-400"
+              class="font-bold relative right-1 text-accent dark:text-accent"
               >{{ dailyGoal || 0 }} стр.</span
             >
           </button>
@@ -75,16 +77,16 @@
       </div>
 
       <!-- Настройки темы -->
-      <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-        <p class="text-gray-500 dark:text-gray-400 mb-3">Оформление:</p>
+      <div class="p-4 border-b border-border dark:border-border-dark">
+        <p class="mb-3">Оформление:</p>
         <div class="grid grid-cols-3 gap-2">
           <button
             @click.stop="setTheme('light')"
             class="flex flex-col items-center p-2 rounded-lg transition-colors"
             :class="
               colorMode === 'light'
-                ? 'bg-blue-100 dark:bg-blue-900/30 ring-2 ring-blue-500'
-                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                ? 'bg-accent/10 ring-2 ring-accent/50'
+                : 'hover:bg-border/50 dark:hover:bg-border-dark/40'
             "
           >
             <span class="text-2xl mb-1">☀️</span>
@@ -96,8 +98,8 @@
             class="flex flex-col items-center p-2 rounded-lg transition-colors"
             :class="
               colorMode === 'dark'
-                ? 'bg-blue-100 dark:bg-blue-900/30 ring-2 ring-blue-500'
-                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                ? 'bg-accent/10 ring-2 ring-accent/50'
+                : 'hover:bg-border/50 dark:hover:bg-border-dark/40'
             "
           >
             <span class="text-2xl mb-1">🌙</span>
@@ -109,8 +111,8 @@
             class="flex flex-col items-center p-2 rounded-lg transition-colors"
             :class="
               colorMode === 'auto'
-                ? 'bg-blue-100 dark:bg-blue-900/30 ring-2 ring-blue-500'
-                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                ? 'bg-accent/10 ring-2 ring-accent/50'
+                : 'hover:bg-border/50 dark:hover:bg-border-dark/40'
             "
           >
             <span class="text-2xl mb-1">⚙️</span>
@@ -120,21 +122,19 @@
       </div>
 
       <!-- Меню действий -->
-      <div class="p-2">
+      <div class="p-2 border-b border-border dark:border-border-dark">
         <button
           @click.stop="openSection('password')"
-          class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-3 transition-colors"
+          class="w-full px-4 py-2 text-left hover:bg-border/50 dark:hover:bg-border-dark/40 rounded-lg flex items-center gap-3 transition-colors"
         >
-          <span class="flex-1 text-base text-gray-600 dark:text-gray-400"
-            >Сменить пароль</span
-          >
+          <span class="flex-1 text-base">Сменить пароль</span>
         </button>
+      </div>
 
-        <div class="border-t border-gray-200 dark:border-gray-700 my-2"></div>
-
+      <div class="p-2">
         <button
           @click.stop="handleLogout"
-          class="w-full px-4 py-1 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-3 text-red-600 dark:text-red-400 transition-colors"
+          class="w-full px-4 py-1 text-left hover:bg-border/50 dark:hover:bg-border-dark/40 rounded-lg flex items-center gap-3 text-red-600 dark:text-red-400 transition-colors"
         >
           <span class="flex-1 text-base">Выйти</span>
         </button>
@@ -156,11 +156,11 @@
         @click.self="closeSection"
       >
         <div
-          class="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl max-h-[90vh] flex flex-col"
+          class="bg-white dark:bg-bg-secondary-dark w-full max-w-md rounded-2xl max-h-[90vh] flex flex-col"
         >
           <!-- Заголовок модалки -->
           <div
-            class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center"
+            class="p-4 border-b border-border dark:border-border-dark flex justify-between items-center"
           >
             <h2 class="text-xl font-bold dark:text-white">{{ modalTitle }}</h2>
             <button
@@ -198,7 +198,7 @@
                 <input
                   v-model="editDisplayName"
                   type="text"
-                  class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
+                  class="w-full px-4 py-2 dark:bg-border-dark/40 border border-border dark:border-border-dark rounded-lg focus:ring-2 focus:ring-accent dark:text-white"
                 />
               </div>
             </div>
@@ -215,7 +215,7 @@
                   v-model.number="editDailyGoal"
                   type="number"
                   min="1"
-                  class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
+                  class="w-full px-4 py-2 dark:bg-border-dark/40 border border-border dark:border-border-dark rounded-lg focus:ring-2 focus:ring-accent dark:text-white"
                 />
               </div>
             </div>
@@ -233,7 +233,7 @@
                   autocomplete="off"
                   readonly
                   onfocus="this.removeAttribute('readonly')"
-                  class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
+                  class="w-full px-4 py-2 dark:bg-border-dark/40 border border-border dark:border-border-dark rounded-lg dark:text-white"
                 />
               </div>
               <div class="space-y-2">
@@ -244,7 +244,7 @@
                 <input
                   v-model="passwordData.new"
                   type="password"
-                  class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
+                  class="w-full px-4 py-2 dark:bg-border-dark/40 border border-border dark:border-border-dark rounded-lg dark:text-white"
                 />
               </div>
               <div class="space-y-2">
@@ -255,7 +255,7 @@
                 <input
                   v-model="passwordData.confirm"
                   type="password"
-                  class="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
+                  class="w-full px-4 py-2 dark:bg-border-dark/40 border border-border dark:border-border-dark rounded-lg dark:text-white"
                 />
               </div>
             </div>
@@ -277,18 +277,18 @@
 
           <!-- Кнопки действий -->
           <div
-            class="p-4 border-t border-gray-200 dark:border-gray-700 flex gap-2"
+            class="p-4 border-t border-border dark:border-border-dark flex gap-2"
           >
             <button
               @click="closeSection"
-              class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              class="flex-1 px-4 py-2 dark:bg-border-dark/40 text-black dark:text-white rounded-lg border border-border dark:border-border-dark hover:bg-border-dark/20 dark:hover:bg-border-dark transition-colors"
             >
               Отмена
             </button>
             <button
               @click="saveSection"
               :disabled="sectionLoading"
-              class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              class="flex-1 px-4 py-2 bg-accent/60 hover:bg-accent/80 text-black dark:text-white rounded-lg disabled:opacity-50 transition-colors"
             >
               <span v-if="!sectionLoading">Сохранить</span>
               <span v-else class="flex items-center justify-center">
